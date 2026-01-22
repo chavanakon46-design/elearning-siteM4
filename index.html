@@ -462,7 +462,7 @@
         });
         alert(`คุณได้คะแนน ${score} / ${currentLesson.quiz_data.length}`);
         await dbClient.from('quiz_results').insert([{
-            student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: currentLesson.quiz_data.length, passed: (score/currentLesson.quiz_data.length >= 0.5)
+            student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: currentLesson.quiz_data.length, passed: (score/currentLesson.quiz_data.length >= 0.7)
         }]);
         backToDash();
     }
@@ -646,5 +646,6 @@
 </script>
 </body>
 </html>
+
 
 
