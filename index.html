@@ -3,67 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-learning KRU Dream</title>
+    <title>E-learning KRU Dream (Modern UI)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        /* --- 1. ส่วนตกแต่ง (CSS) --- */
+        /* --- CSS มาตรฐาน (นำมาจาก Reference Code V.4.2) --- */
         :root {
-            --primary: #4f46e5; /* สีหลัก (ปรับเปลี่ยนได้) */
+            --primary: #4f46e5; 
             --primary-hover: #4338ca;
             --danger: #ef4444;
             --success: #22c55e;
+            --warning: #f59e0b;
             --bg: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #1f2937;
         }
 
         body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; }
+
+        /* Layout */
         .container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 85vh; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
         
-        /* Elements */
+        /* Inputs & Buttons */
         input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
         textarea { height: 120px; font-family: monospace; }
-        .btn { display: inline-block; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: 0.2s; text-align: center; color: white; }
+        
+        .btn { display: inline-block; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: 0.2s; text-align: center; color: white;}
+        .btn-sm { padding: 4px 10px; font-size: 0.85rem; }
         .btn-primary { background: var(--primary); }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-danger { background: var(--danger); }
         .btn-success { background: var(--success); }
         .btn-outline { background: white; border: 1px solid #d1d5db; color: var(--text-main); }
         .btn-outline:hover { background: #eff6ff; border-color: var(--primary); color: var(--primary); }
+        
+        /* Utilities */
         .hidden { display: none !important; }
         .flex-gap { display: flex; gap: 10px; flex-wrap: wrap; }
-        .badge { background: #e0f2fe; color: #075985; padding: 4px 10px; border-radius: 12px; font-weight: bold; }
+        .badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .badge-time { background: #e0f2fe; color: #075985; padding: 4px 10px; border-radius: 12px; font-weight: bold; }
+        .w-full { width: 100%; }
 
-        /* Dashboard Grid */
+        /* Menu Grid */
         .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .menu-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; cursor: pointer; background: #fff; transition: 0.2s; position: relative; overflow: hidden; }
         .menu-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary); }
         .topic-number { font-size: 3rem; font-weight: 900; color: #f3f4f6; position: absolute; right: -10px; top: -10px; z-index: 0; }
         .topic-content { position: relative; z-index: 1; }
 
-        /* Quiz & Lesson */
+        /* Lesson & Quiz Viewer */
         .lesson-viewer { background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px; min-height: 200px; }
-        .question-box { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px; background: white; }
-        .option-label { display: block; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-top: 5px; cursor: pointer; }
-        .option-label:hover { background: #f1f5f9; }
+        .quiz-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 20px; }
+        .question-box { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        
+        /* Quiz Options Styling */
+        .option-label { display: flex; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-top: 5px; cursor: pointer; transition: 0.2s; gap: 10px; }
+        .option-label:hover { background: #f1f5f9; border-color: var(--primary); }
+        .option-label input[type="radio"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
 
-        /* Admin & Table */
+        /* Admin & Tables */
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         .data-table th, .data-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
-        .data-table th { background: #f3f4f6; }
+        .data-table th { background: #f3f4f6; font-weight: 600; }
+        .status-pass { color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .status-fail { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
         /* Modal */
         .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; display:flex; justify-content:center; align-items:center; }
-        .modal-box { background:white; width:90%; max-width:900px; padding:25px; border-radius:10px; max-height:90vh; overflow-y:auto; }
+        .modal-box { background:white; width:90%; max-width:900px; padding:25px; border-radius:10px; max-height:90vh; overflow-y:auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
 
-        /* Quiz Editor Style /*Admin: ชื่อ admin, เลขที่ 1234*/
-        .quiz-editor-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; }
-        .opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 6px; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; font-weight: bold; color: #6b7280; border-bottom: 3px solid transparent; }
+        /* Tabs */
+        .tab-group { border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; display: flex; gap: 20px; }
+        .tab-btn { padding: 10px 10px; cursor: pointer; color: #6b7280; border-bottom: 3px solid transparent; font-weight: 600; }
         .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Admin Quiz Editor Cards */
+        .quiz-editor-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; position: relative; transition: 0.2s; }
+        .quiz-editor-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-color: var(--primary); }
+        .quiz-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        
+        /* Modal Form Styles */
+        .opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #f1f5f9; }
+        .opt-row input[type="radio"] { width: 20px; height: 20px; }
+        .opt-row input[type="text"] { margin: 0; }
     </style>
 </head>
 <body>
@@ -76,76 +100,92 @@
             <small id="appSubtitle" style="color: #6b7280;">Loading...</small>
         </div>
         <div id="userInfo" class="hidden text-right">
-            <span id="userDisplay" style="font-weight: bold; margin-right: 10px;"></span>
-            <span id="timerDisplay" class="badge hidden">⏱ 00:00</span>
-            <button onclick="openProfile()" class="btn btn-sm btn-outline">👤 ประวัติ</button>
-            <button onclick="logout()" class="btn btn-sm btn-danger">ออก</button>
+            <div style="margin-bottom: 5px;">
+                <span id="userDisplay" style="font-weight: bold; font-size: 1.1rem;"></span>
+            </div>
+            <div class="flex-gap" style="justify-content: flex-end; align-items: center;">
+                <div id="timerDisplay" class="badge-time hidden">⏱ 00:00</div>
+                <button onclick="openProfile()" class="btn btn-sm btn-outline">👤 ประวัติ</button>
+                <button onclick="logout()" class="btn btn-sm btn-danger">ออก</button>
+            </div>
         </div>
     </header>
 
     <div id="loginSection" class="text-center" style="padding: 60px 0;">
-        <h2>เข้าสู่ระบบห้องเรียน(กรอกข้อมูลให้ถูกต้องครบถ้วน)</h2>
-        <div style="max-width: 350px; margin: 0 auto;">
-            <input type="text" id="stdName" placeholder="ชื่อ-นามสกุล(ระหว่างชื่อกับนามสกุลเว้นวรรค 1 เคาะ)">
+        <h2 style="color: var(--text-main);">เข้าสู่ระบบห้องเรียน</h2>
+        <div style="max-width: 350px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+            <input type="text" id="stdName" placeholder="ชื่อ-นามสกุล (เว้นวรรค 1 เคาะ)">
             <input type="text" id="stdClass" placeholder="ชั้น (เช่น ม.4/1)">
             <input type="number" id="stdNumber" placeholder="เลขที่">
-            <button onclick="handleLogin()" class="btn btn-primary w-full" style="width:100%; margin-top:10px;">เข้าสู่ระบบ</button>  
+            <button onclick="handleLogin()" class="btn btn-primary w-full" style="margin-top: 15px;">เข้าสู่ระบบ</button>  
         </div>
     </div>
     
-
     <div id="studentDashboard" class="hidden">
         <div id="mainMenu">
-            <h3>📚 เลือกบทเรียน</h3>
+            <h3 style="margin-bottom: 20px;">📚 เลือกบทเรียน</h3>
             <div class="grid-menu" id="topicGrid"></div>
         </div>
 
         <div id="contentArea" class="hidden">
-            <div class="header" style="border:none; padding:0; margin-bottom: 10px;">
+            <div class="header" style="border:none; padding-bottom:0; margin-bottom: 10px;">
                 <h2 id="lessonTitle" style="margin:0;">หัวข้อบทเรียน</h2>
-                <button onclick="backToDash()" class="btn btn-outline">⬅ กลับ</button>
+                <button onclick="backToDash()" class="btn btn-outline btn-sm">⬅ กลับหน้าหลัก</button>
             </div>
-            <div class="flex-gap" style="border-bottom: 2px solid #eee; margin-bottom: 20px;">
-                <div class="tab-btn active" onclick="switchContentTab('learn')">📖 เนื้อหา</div>
-                <div class="tab-btn" onclick="switchContentTab('quiz')">📝 แบบทดสอบ</div>
+
+            <div class="tab-group">
+                <div id="tab-learn" class="tab-btn active" onclick="switchContentTab('learn')">📖 เนื้อหาบทเรียน</div>
+                <div id="tab-quiz" class="tab-btn" onclick="switchContentTab('quiz')">📝 แบบทดสอบท้ายหน่วย</div>
             </div>
-            <div id="view-learn"><div id="lessonViewer" class="lesson-viewer"></div></div>
-            <div id="view-quiz" class="hidden"><div id="quizArea"></div></div>
+
+            <div id="view-learn">
+                <div id="lessonViewer" class="lesson-viewer"></div>
+            </div>
+            <div id="view-quiz" class="hidden">
+                <div id="quizArea" class="quiz-container"></div>
+            </div>
         </div>
     </div>
 
     <div id="adminDashboard" class="hidden">
-        <div style="background:#fff7ed; padding:10px; border-radius:8px; margin-bottom:20px; display:flex; justify-content:space-between;">
+        <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px solid #fdba74; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0; color:#9a3412;">🔧 ระบบจัดการ (Admin)</h3>
-            <button onclick="logout()" class="btn btn-danger">ออก</button>
+            <button onclick="logout()" class="btn btn-danger btn-sm">ออกจากระบบ Admin</button>
         </div>
         
-        <div class="flex-gap" style="margin-bottom:15px;">
-            <button onclick="switchAdminTab('content')" class="btn btn-outline">จัดการบทเรียน</button>
-            <button onclick="switchAdminTab('monitor')" class="btn btn-outline">ติดตามนักเรียน</button>
+        <div class="tab-group">
+            <div class="tab-btn active" onclick="switchAdminTab('content')">จัดการเนื้อหา</div>
+            <div class="tab-btn" onclick="switchAdminTab('monitor')">ติดตามผู้เรียน</div>
         </div>
 
-        <div id="admin-tab-content" style="display: flex; gap: 20px;">
-            <div style="flex: 1; border: 1px solid #ddd; padding: 10px; height: 500px; overflow-y: auto;">
-                <h4>เลือกบทเรียนเพื่อแก้ไข</h4>
+        <div id="admin-tab-content" style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 280px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fff; height: 500px; overflow-y: auto;">
+                <h4 style="margin-top:0;">เลือกบทเรียนเพื่อแก้ไข</h4>
                 <div id="adminLessonList"></div>
-                <button onclick="prepareNewLesson()" class="btn btn-success w-full" style="width:100%; margin-top:10px;">+ สร้างใหม่</button>
+                <button onclick="prepareNewLesson()" class="btn btn-success w-full" style="margin-top:10px;">+ สร้างบทเรียนใหม่</button>
             </div>
-            <div style="flex: 2; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+            
+            <div style="flex: 2; min-width: 350px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff;">
                 <h4 style="margin-top:0;">📝 Editor</h4>
                 <input type="hidden" id="editId">
+                <label>หัวข้อ:</label>
                 <input type="text" id="editTitle" placeholder="ชื่อบทเรียน">
+                <label>หมวดหมู่:</label>
                 <select id="editCategory"></select>
+                <label>เนื้อหา (HTML):</label>
                 <textarea id="editContent" placeholder="ใส่ HTML หรือ Iframe ที่นี่..."></textarea>
                 
-                <hr>
-                <div style="display:flex; justify-content:space-between;">
-                    <h4>🧠 สร้างข้อสอบ</h4>
-                    <button onclick="openQuestionModal()" class="btn btn-outline btn-sm">+ เพิ่มข้อสอบ</button>
-                </div>
-                <div id="qList" style="background:#f9fafb; padding:10px; border-radius:6px; margin-bottom:10px;"></div>
+                <hr style="margin: 20px 0;">
                 
-                <div class="flex-gap">
+                <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="margin:0;">🧠 สร้างข้อสอบ</h4>
+                        <button onclick="openQuestionModal()" class="btn btn-outline btn-sm">+ เพิ่มข้อสอบ</button>
+                    </div>
+                    <div id="qList"></div>
+                </div>
+                
+                <div class="flex-gap" style="margin-top: 20px;">
                     <button onclick="saveLessonToDB()" class="btn btn-primary">บันทึกทั้งหมด</button>
                     <button onclick="deleteLesson()" class="btn btn-danger">ลบบทเรียน</button>
                 </div>
@@ -153,30 +193,44 @@
         </div>
 
         <div id="admin-tab-monitor" class="hidden">
-            <button onclick="fetchStudentMonitor()" class="btn btn-outline btn-sm">🔄 รีเฟรช</button>
-            <table class="data-table">
-                <thead><tr><th>ชื่อ-สกุล</th><th>ชั้น/เลขที่</th><th>บทที่จบ</th><th>เวลาเรียน</th><th>จัดการ</th></tr></thead>
-                <tbody id="monitorTableBody"></tbody>
-            </table>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3>📋 รายชื่อนักเรียน</h3>
+                <button onclick="fetchStudentMonitor()" class="btn btn-outline btn-sm">🔄 รีเฟรช</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead><tr><th>ชื่อ-สกุล</th><th>ชั้น/เลขที่</th><th>บทที่จบ</th><th>เวลาเรียน</th><th>จัดการ</th></tr></thead>
+                    <tbody id="monitorTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div id="profileModal" class="hidden modal-overlay">
         <div class="modal-box">
-            <h2>ผลการเรียนของฉัน</h2>
-            <p>เวลาเรียนรวม: <span id="profileTotalTime" style="font-weight:bold; color:var(--primary)">0</span> นาที</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>ผลการเรียนของฉัน</h2>
+                <button onclick="closeModal('profileModal')" class="btn btn-sm btn-danger">ปิด</button>
+            </div>
+            <p>เวลาเรียนรวม: <span id="profileTotalTime" style="font-weight:bold; color:var(--primary); font-size:1.5rem;">0</span> นาที</p>
             <table class="data-table"><thead><tr><th>วันที่</th><th>บทเรียน</th><th>คะแนน</th><th>ผล</th></tr></thead><tbody id="profileQuizTable"></tbody></table>
-            <button onclick="closeModal('profileModal')" class="btn btn-danger" style="margin-top:20px;">ปิด</button>
         </div>
     </div>
 
     <div id="questionModal" class="hidden modal-overlay">
         <div class="modal-box" style="max-width: 600px;">
-            <h3>✏️ แก้ไข/เพิ่ม ข้อสอบ</h3>
-            <textarea id="qInputText" placeholder="คำถาม..." style="height: 60px;"></textarea>
+            <h3 style="margin-top:0;">✏️ จัดการข้อสอบ</h3>
+            <label>โจทย์คำถาม:</label>
+            <textarea id="qInputText" placeholder="พิมพ์คำถาม..." style="height: 80px;"></textarea>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0;">
+                <label>ตัวเลือกคำตอบ (ติ๊กถูกหน้าข้อที่ถูก):</label>
+                <button onclick="addOptionInput()" class="btn btn-sm btn-success">+ เพิ่มตัวเลือก</button>
+            </div>
+            
             <div id="optionInputsContainer"></div>
-            <button onclick="addOptionInput()" class="btn btn-sm btn-success" style="margin-top:5px;">+ เพิ่มตัวเลือก</button>
-            <div style="margin-top: 15px; text-align: right;">
+            
+            <div style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px;">
                 <button onclick="saveQuestionToMemory()" class="btn btn-primary">ยืนยัน</button>
                 <button onclick="closeModal('questionModal')" class="btn btn-danger">ยกเลิก</button>
             </div>
@@ -185,9 +239,11 @@
     
     <div id="adminDetailModal" class="hidden modal-overlay">
          <div class="modal-box">
-            <h2 id="admDetailTitle">รายละเอียด</h2>
-            <table class="data-table"><thead><tr><th>บทเรียน</th><th>สถานะ</th><th>เวลา</th><th>คะแนนล่าสุด</th></tr></thead><tbody id="admDetailBody"></tbody></table>
-            <button onclick="closeModal('adminDetailModal')" class="btn btn-danger" style="margin-top:10px;">ปิด</button>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="admDetailTitle" style="margin:0;">รายละเอียด</h2>
+                <button onclick="closeModal('adminDetailModal')" class="btn btn-danger btn-sm">ปิด</button>
+            </div>
+            <table class="data-table" style="margin-top:20px;"><thead><tr><th>บทเรียน</th><th>สถานะ</th><th>เวลา</th><th>คะแนนล่าสุด</th></tr></thead><tbody id="admDetailBody"></tbody></table>
          </div>
     </div>
 
@@ -195,18 +251,13 @@
 
 <script>
     // =======================================================
-    // ⚙️ ส่วนตั้งค่า (CONFIG) - แก้ไขตรงนี้
+    // ⚙️ ส่วนตั้งค่า (CONFIG)
     // =======================================================
     const CONFIG = {
-        // 1. ตั้งค่าชื่อเว็บและรายวิชา
         appName: "บทเรียนออนไลน์ เรื่อง การเขียนรายงานโครงงานคอมพิวเตอร์",
-        subTitle: "ความรู้ในการจัดทำโครงงานคอมพิวเตอร์",
-
-        // 2. ตั้งค่าการเชื่อมต่อ Supabase (เอามาจาก Project Settings -> API)
+        subTitle: "ความรู้ในการจัดทำโครงงานคอมพิวเตอร์ (E-learning V.4.2)",
         supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
         supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydXZvdHdydWtycXd2YXVkYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzk3NTksImV4cCI6MjA4NDYxNTc1OX0.GkBklU6IxxNgpCZ3FmFdnAwqPGtJLbcyZxlO5YMD3PA',
-
-        // 3. กำหนดหัวข้อบทเรียน (ID ต้องเป็นภาษาอังกฤษไม่ซ้ำกัน)
         units: [
             { id: 'unit1', title: 'บทที่ 1: บทนำ' },
             { id: 'unit2', title: 'บทที่ 2: เอกสารและทฤษฎีที่เกี่ยวข้อง' },
@@ -220,7 +271,6 @@
     // 🚀 ระบบทำงาน (System Logic)
     // =======================================================
     
-    // Init Supabase
     let dbClient;
     try {
         if(CONFIG.supabaseUrl.includes('ใส่_')) {
@@ -230,7 +280,6 @@
         }
     } catch (e) { console.error("DB Init Error", e); }
 
-    // Variables
     let currentUser = null;
     let currentLesson = null;
     let studyTimer = null;
@@ -239,7 +288,6 @@
     let allLessonsCache = [];
     let editingQuestionIndex = -1;
 
-    // On Load
     window.onload = function() {
         document.getElementById('appTitle').innerText = CONFIG.appName;
         document.getElementById('appSubtitle').innerText = CONFIG.subTitle;
@@ -247,7 +295,6 @@
         initAdminSelect();
     };
 
-    // Helper: Initialize UI based on CONFIG
     function initTopicGrid() {
         const grid = document.getElementById('topicGrid');
         grid.innerHTML = '';
@@ -275,7 +322,6 @@
         });
     }
 
-    // --- Auth ---
     async function handleLogin() {
         if (!dbClient) return alert("กรุณาตั้งค่า Supabase URL/KEY ในโค้ดก่อน");
         const name = document.getElementById('stdName').value.trim();
@@ -284,7 +330,6 @@
 
         if (!name || !code) return alert("กรอกข้อมูลให้ครบ");
 
-        // Admin Login Hardcoded
         if (name.toLowerCase() === 'admin' && code === '1234') {
             currentUser = { role: 'admin', name: 'Administrator' };
             switchPage('adminDashboard');
@@ -292,19 +337,16 @@
             return;
         }
 
-        // Student Login/Register
         let { data: user, error } = await dbClient.from('student_progress')
             .select('*').eq('student_name', name).eq('student_number', code).single();
 
         if (!user) {
-            // New User
             const { data: newUser, error: err } = await dbClient.from('student_progress')
                 .insert([{ student_name: name, student_class: sClass, student_number: code, study_time: {}, completed_lessons: [] }])
                 .select().single();
             if (err) return alert("Error: " + err.message);
             user = newUser;
         } else {
-            // Existing User Update Login Time
             await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
         }
 
@@ -324,7 +366,6 @@
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // --- Student Logic ---
     async function loadLessonGroup(catId) {
         const { data } = await dbClient.from('lessons').select('*').eq('category', catId).limit(1).single();
         if (!data) return alert("ยังไม่มีบทเรียนในหัวข้อนี้ (Admin ต้องเพิ่มก่อน)");
@@ -339,12 +380,17 @@
     }
 
     function switchContentTab(tab) {
+        // Handle Tabs Styles
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
         if(tab === 'learn') {
+            document.getElementById('tab-learn').classList.add('active');
             document.getElementById('view-learn').classList.remove('hidden');
             document.getElementById('view-quiz').classList.add('hidden');
             document.getElementById('lessonViewer').innerHTML = currentLesson.content;
             startTimer();
         } else {
+            document.getElementById('tab-quiz').classList.add('active');
             document.getElementById('view-learn').classList.add('hidden');
             document.getElementById('view-quiz').classList.remove('hidden');
             stopLessonTimer();
@@ -358,7 +404,6 @@
         document.getElementById('mainMenu').classList.remove('hidden');
     }
 
-    // Timer Logic
     function startTimer() {
         stopLessonTimer();
         secondsSpent = 0;
@@ -370,7 +415,6 @@
             document.getElementById('timerDisplay').innerText = `⏱ ${m}:${s}`;
         }, 1000);
         
-        // Mark as started/completed if needed
         if(!currentUser.completed_lessons.includes(currentLesson.id)) {
              currentUser.completed_lessons.push(currentLesson.id);
              dbClient.from('student_progress').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then();
@@ -389,18 +433,24 @@
         }
     }
 
-    // --- Quiz Logic ---
+    // --- New Student Quiz Renderer ---
     function renderStudentQuiz() {
         const div = document.getElementById('quizArea');
         div.innerHTML = '';
-        if(!currentLesson.quiz_data || !currentLesson.quiz_data.length) return div.innerHTML = '<p>ไม่มีแบบทดสอบ</p>';
+        if(!currentLesson.quiz_data || !currentLesson.quiz_data.length) return div.innerHTML = '<p style="text-align:center; color:#888;">ยังไม่มีแบบทดสอบในบทเรียนนี้</p>';
 
+        div.innerHTML = `<h3 style="margin-top:0;">แบบทดสอบ: ${currentLesson.title}</h3>`;
         currentLesson.quiz_data.forEach((q, i) => {
             let opts = '';
-            q.options.forEach((o, oi) => opts += `<label class="option-label"><input type="radio" name="q_${i}" value="${oi}"> ${o}</label>`);
-            div.innerHTML += `<div class="question-box"><p><b>${i+1}.</b> ${q.question}</p>${opts}</div>`;
+            q.options.forEach((o, oi) => {
+                opts += `<label class="option-label">
+                            <input type="radio" name="q_${i}" value="${oi}"> 
+                            <span>${o}</span>
+                        </label>`;
+            });
+            div.innerHTML += `<div class="question-box"><p><b>ข้อที่ ${i+1}.</b> ${q.question}</p><div>${opts}</div></div>`;
         });
-        div.innerHTML += `<button onclick="submitQuiz()" class="btn btn-primary">ส่งคำตอบ</button>`;
+        div.innerHTML += `<button onclick="submitQuiz()" class="btn btn-primary w-full" style="padding:15px; font-size:1.1rem;">ส่งคำตอบ</button>`;
     }
 
     async function submitQuiz() {
@@ -410,14 +460,13 @@
             const sel = document.querySelector(`input[name="q_${i}"]:checked`);
             if(sel && parseInt(sel.value) === parseInt(q.correct)) score++;
         });
-        alert(`ได้คะแนน ${score} / ${currentLesson.quiz_data.length}`);
+        alert(`คุณได้คะแนน ${score} / ${currentLesson.quiz_data.length}`);
         await dbClient.from('quiz_results').insert([{
             student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: currentLesson.quiz_data.length, passed: (score/currentLesson.quiz_data.length >= 0.5)
         }]);
         backToDash();
     }
 
-    // --- Profile & Admin ---
     async function openProfile() {
         let total = 0;
         if(currentUser.study_time) Object.values(currentUser.study_time).forEach(t => total+=t);
@@ -428,12 +477,12 @@
         tb.innerHTML = '';
         if(res) res.forEach(r => {
            const title = r.lessons ? r.lessons.title : '-';
-           tb.innerHTML += `<tr><td>${new Date(r.created_at).toLocaleDateString()}</td><td>${title}</td><td>${r.score}/${r.total_score}</td><td>${r.passed?'ผ่าน':'ไม่ผ่าน'}</td></tr>`;
+           const resultBadge = r.passed ? '<span class="status-pass">ผ่าน</span>' : '<span class="status-fail">ไม่ผ่าน</span>';
+           tb.innerHTML += `<tr><td>${new Date(r.created_at).toLocaleDateString()}</td><td>${title}</td><td>${r.score}/${r.total_score}</td><td>${resultBadge}</td></tr>`;
         });
         document.getElementById('profileModal').classList.remove('hidden');
     }
 
-    // Admin Functions (Simplified)
     function switchAdminTab(t) {
         document.getElementById('admin-tab-content').style.display = t==='content'?'flex':'none';
         document.getElementById('admin-tab-monitor').classList.toggle('hidden', t!=='monitor');
@@ -445,7 +494,9 @@
         const div = document.getElementById('adminLessonList');
         div.innerHTML = '';
         allLessonsCache.forEach(l => {
-            div.innerHTML += `<div onclick='loadEditor(${l.id})' style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;">${l.category}: ${l.title}</div>`;
+            div.innerHTML += `<div onclick='loadEditor(${l.id})' style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+                <b>${l.category}</b>: ${l.title}
+            </div>`;
         });
     }
 
@@ -493,42 +544,54 @@
         }
     }
 
-    // Quiz Builder Logic
+    // --- New Admin Quiz Editor Renderer (Card Style) ---
     function renderQuizList() {
         const div = document.getElementById('qList');
         div.innerHTML = '';
+        if(editingQuizData.length === 0) div.innerHTML = '<p style="color:#aaa; text-align:center;">ยังไม่มีข้อสอบ</p>';
+        
         editingQuizData.forEach((q, i) => {
             div.innerHTML += `<div class="quiz-editor-card">
-                <b>ข้อ ${i+1}:</b> ${q.question} <br>
-                <small>เฉลย: ${q.options[q.correct]}</small>
-                <div style="text-align:right;">
-                    <button onclick="editQ(${i})" class="btn btn-sm btn-outline">แก้</button>
-                    <button onclick="delQ(${i})" class="btn btn-sm btn-danger">ลบ</button>
+                <div style="font-weight:bold; color:var(--primary);">ข้อที่ ${i+1}</div>
+                <div style="margin:5px 0;">${q.question}</div>
+                <div style="font-size:0.85rem; color:#6b7280;">เฉลย: ${q.options[q.correct]} (จาก ${q.options.length} ตัวเลือก)</div>
+                <div class="quiz-actions">
+                    <button onclick="editQ(${i})" class="btn btn-sm btn-outline">✏️ แก้ไข</button>
+                    <button onclick="delQ(${i})" class="btn btn-sm btn-danger">🗑 ลบ</button>
                 </div>
             </div>`;
         });
     }
+
     function openQuestionModal() {
         editingQuestionIndex = -1;
         document.getElementById('qInputText').value = '';
         document.getElementById('optionInputsContainer').innerHTML = '';
-        addOptionInput(); addOptionInput();
+        addOptionInput(); addOptionInput(); // Default 2 options
         document.getElementById('questionModal').classList.remove('hidden');
     }
+
     function addOptionInput(val='', isC=false) {
         const d = document.createElement('div');
         d.className = 'opt-row';
-        d.innerHTML = `<input type="radio" name="corr" ${isC?'checked':''}> <input type="text" class="opt-val" value="${val}" style="margin:0;"> <button onclick="this.parentElement.remove()">x</button>`;
+        d.innerHTML = `<input type="radio" name="corr" ${isC?'checked':''}> <input type="text" class="opt-val" value="${val}" placeholder="ใส่ตัวเลือก..." style="margin:0;"> <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:#999;">✖</button>`;
         document.getElementById('optionInputsContainer').appendChild(d);
     }
+
     function saveQuestionToMemory() {
         const q = document.getElementById('qInputText').value;
         const opts = []; let corr = -1;
         document.querySelectorAll('#optionInputsContainer .opt-row').forEach((r, i) => {
-            opts.push(r.querySelector('.opt-val').value);
-            if(r.querySelector('input[name="corr"]').checked) corr = i;
+            const val = r.querySelector('.opt-val').value.trim();
+            if(val) {
+                opts.push(val);
+                if(r.querySelector('input[name="corr"]').checked) corr = opts.length - 1; // Correct logic based on pushed array
+            }
         });
-        if(corr === -1) return alert("เลือกข้อถูกด้วย");
+
+        if(corr === -1) return alert("กรุณาติ๊กถูกหน้าข้อที่เป็นเฉลย");
+        if(opts.length < 2) return alert("ต้องมีตัวเลือกอย่างน้อย 2 ข้อ");
+        
         const obj = { question: q, options: opts, correct: corr };
         
         if(editingQuestionIndex === -1) editingQuizData.push(obj);
@@ -536,6 +599,7 @@
         
         renderQuizList(); closeModal('questionModal');
     }
+
     function editQ(i) {
         editingQuestionIndex = i;
         const d = editingQuizData[i];
@@ -544,23 +608,28 @@
         d.options.forEach((o, idx) => addOptionInput(o, idx===parseInt(d.correct)));
         document.getElementById('questionModal').classList.remove('hidden');
     }
+
     function delQ(i) {
-        if(confirm("ลบ?")) { editingQuizData.splice(i,1); renderQuizList(); }
+        if(confirm("ต้องการลบข้อนี้?")) { editingQuizData.splice(i,1); renderQuizList(); }
     }
 
-    // Monitor Logic
     async function fetchStudentMonitor() {
         const { data } = await dbClient.from('student_progress').select('*').order('last_login',{ascending:false});
         const tb = document.getElementById('monitorTableBody');
         tb.innerHTML = '';
         data.forEach((s,i) => {
             let t = 0; if(s.study_time) Object.values(s.study_time).forEach(v=>t+=v);
-            tb.innerHTML += `<tr><td>${s.student_name}</td><td>${s.student_class} #${s.student_number}</td>
-            <td>${s.completed_lessons?.length||0} บท</td><td>${Math.floor(t/60)} นาที</td>
-            <td><button class="btn btn-sm btn-outline" onclick="viewDetail(${i})">ดู</button></td></tr>`;
+            tb.innerHTML += `<tr>
+                <td>${s.student_name}</td>
+                <td>${s.student_class} #${s.student_number}</td>
+                <td><span class="badge">${s.completed_lessons?.length||0} บท</span></td>
+                <td>${Math.floor(t/60)} นาที</td>
+                <td><button class="btn btn-sm btn-primary" onclick="viewDetail(${i})">ดูข้อมูล</button></td>
+            </tr>`;
         });
         window.tempMonitorData = data;
     }
+
     async function viewDetail(i) {
         const s = window.tempMonitorData[i];
         const { data: q } = await dbClient.from('quiz_results').select('*').eq('student_id', s.id);
@@ -568,19 +637,12 @@
         tb.innerHTML = '';
         CONFIG.units.forEach(u => {
             const time = (s.study_time && s.study_time[u.id]) ? Math.floor(s.study_time[u.id]/60) : 0;
-            const isFin = s.completed_lessons?.includes(u.id); // Note: Need to match real ID in prod
-            // For template simplicity, we just show generic data
-            tb.innerHTML += `<tr><td>${u.title}</td><td>${isFin?'✅':'❌'}</td><td>${time} น.</td><td>-</td></tr>`;
+            const isFin = s.completed_lessons?.includes(u.id);
+            tb.innerHTML += `<tr><td>${u.title}</td><td>${isFin?'<span class="status-pass">จบแล้ว</span>':'<span style="color:#ccc;">ยังไม่จบ</span>'}</td><td>${time} น.</td><td>-</td></tr>`;
         });
         document.getElementById('adminDetailModal').classList.remove('hidden');
     }
 
 </script>
 </body>
-
 </html>
-
-
-
-
-
