@@ -630,22 +630,63 @@
         window.tempMonitorData = data;
     }
 
+    // ฟังก์ชันดูรายละเอียดนักเรียน (แก้ไขแล้ว: แสดงคะแนน + สถานะเรียนจบถูกต้อง)
     async function viewDetail(i) {
         const s = window.tempMonitorData[i];
-        const { data: q } = await dbClient.from('quiz_results').select('*').eq('student_id', s.id);
+
+        // 1. ดึงผลสอบทั้งหมดของนักเรียนคนนี้
+        const { data: qResults } = await dbClient
+            .from('quiz_results')
+            .select('*')
+            .eq('student_id', s.id)
+            .order('created_at', { ascending: false }); // เอาล่าสุดขึ้นก่อน
+
+        // 2. ดึงบทเรียนทั้งหมดเพื่อเอามาเทียบ ID (Mapping)
+        // เพราะ CONFIG.units เก็บเป็น string ('unit1') แต่ Database เก็บเป็น ID ตัวเลข
+        const { data: allLessons } = await dbClient.from('lessons').select('id, category');
+
         const tb = document.getElementById('admDetailBody');
         tb.innerHTML = '';
+
         CONFIG.units.forEach(u => {
+            // หาว่า Unit นี้ (เช่น unit1) ตรงกับ Lesson ID อะไรใน Database
+            const targetLesson = allLessons ? allLessons.find(l => l.category === u.id) : null;
+
+            // --- ส่วนที่ 1: เวลาเรียน ---
             const time = (s.study_time && s.study_time[u.id]) ? Math.floor(s.study_time[u.id]/60) : 0;
-            const isFin = s.completed_lessons?.includes(u.id);
-            tb.innerHTML += `<tr><td>${u.title}</td><td>${isFin?'<span class="status-pass">จบแล้ว</span>':'<span style="color:#ccc;">ยังไม่จบ</span>'}</td><td>${time} น.</td><td>-</td></tr>`;
+
+            // --- ส่วนที่ 2: สถานะจบ (แก้ไข Bug) ---
+            // ต้องเช็คว่า completed_lessons (ที่เป็น ID) มี ID ของบทเรียนนี้ไหม
+            const isFin = targetLesson && s.completed_lessons?.includes(targetLesson.id);
+            
+            // --- ส่วนที่ 3: คะแนน (แก้ไข Bug) ---
+            let scoreDisplay = '-';
+            if (targetLesson && qResults) {
+                // หาผลสอบที่ lesson_id ตรงกับบทเรียนนี้
+                const match = qResults.find(r => r.lesson_id == targetLesson.id);
+                
+                if (match) {
+                    const badgeClass = match.passed ? 'status-pass' : 'status-fail';
+                    scoreDisplay = `<span class="${badgeClass}">${match.score}/${match.total_score}</span>`;
+                }
+            }
+
+            // Render แถวตาราง
+            tb.innerHTML += `<tr>
+                <td>${u.title}</td>
+                <td>${isFin ? '<span class="status-pass">จบแล้ว</span>' : '<span style="color:#ccc;">ยังไม่จบ</span>'}</td>
+                <td>${time} น.</td>
+                <td>${scoreDisplay}</td>
+            </tr>`;
         });
+
         document.getElementById('adminDetailModal').classList.remove('hidden');
     }
 
 </script>
 </body>
 </html>
+
 
 
 
