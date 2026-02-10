@@ -111,7 +111,7 @@
             <div class="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
         <p class="text-indigo-700 font-bold animate-pulse text-lg">กำลังเชื่อมต่อฐานข้อมูล...</p>
-        <p class="text-xs text-slate-400 mt-2">อาจใช้เวลาสักครู่ในครั้งแรก</p>
+        <p class="text-xs text-slate-400 mt-2">ระบบกำลังปลุกฐานข้อมูล อาจใช้เวลาสูงสุด 1 นาทีในครั้งแรก</p>
         <button onclick="showLoading(false)" class="mt-6 px-4 py-2 bg-slate-200 text-slate-600 text-sm rounded-full hover:bg-slate-300 transition">
             ยกเลิก
         </button>
@@ -485,9 +485,21 @@
         } catch (e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
 
         window.onload = function() {
+            warmUpDatabase(); // Silent Wake-up!
             initTopicGrid();
             initAdminSelect();
         };
+
+        async function warmUpDatabase() {
+            // Send a tiny request to wake up the DB immediately when page loads
+            try {
+                // Just fetching one lesson ID to trigger cold start
+                await dbClient.from('lessons').select('id').limit(1);
+                console.log('Database awake!');
+            } catch (e) {
+                console.log('Waking up DB...');
+            }
+        }
 
         function showLoading(show) {
             document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
@@ -512,9 +524,9 @@
 
             showLoading(true);
 
-            // Timeout Promise (Stops loading if DB is slow)
+            // Timeout Promise (Increased to 60s for full cold start safety)
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Connection Timeout: Database is sleeping')), 10000)
+                setTimeout(() => reject(new Error('Connection Timeout: Database is sleeping')), 60000)
             );
 
             // Fetch Logic
@@ -549,7 +561,7 @@
                 console.error(err);
                 
                 let msg = err.message;
-                if(msg.includes('Timeout')) msg = 'ฐานข้อมูลกำลังเริ่มทำงาน กรุณาลองใหม่อีกครั้งใน 10 วินาที';
+                if(msg.includes('Timeout')) msg = 'ฐานข้อมูลกำลังเริ่มทำงาน กรุณาลองใหม่อีกครั้งใน 1 นาที';
                 
                 Swal.fire({
                     icon: 'error',
