@@ -133,7 +133,7 @@
     <!-- Main Content -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- 1. Login Section (5-Digit Code Only) -->
+        <!-- 1. Login Section (Student) -->
         <section id="loginSection" class="max-w-md mx-auto fade-in">
             <div class="glass-card p-8 mt-16 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
@@ -151,17 +151,44 @@
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">รหัสประจำตัวนักเรียน</label>
                         <div class="relative group">
                             <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-400 group-focus-within:text-indigo-500 transition"></i>
-                            <input type="text" inputmode="numeric" id="stdCode" maxlength="5" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition outline-none bg-white text-center text-lg font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300" placeholder="XXXXX" onkeyup="if(event.key === 'Enter') handleLogin()">
+                            <input type="text" id="stdCode" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition outline-none bg-white text-center text-lg font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300" placeholder="XXXXX" onkeyup="if(event.key === 'Enter') handleLogin()">
                         </div>
                     </div>
                     
                     <button onclick="handleLogin()" id="btnLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
                         <span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
-                    
-                    <div class="text-center pt-2">
-                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน ใช้รหัส: <span class="font-mono bg-slate-100 px-1 rounded">99999</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 1.5 Teacher Login Section (Hidden by default) -->
+        <section id="teacherLoginSection" class="hidden max-w-md mx-auto fade-in">
+            <div class="glass-card p-8 mt-16 relative overflow-hidden border-t-4 border-indigo-600">
+                <div class="text-center mb-8">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 text-2xl">
+                        <i class="fa-solid fa-chalkboard-user"></i>
                     </div>
+                    <h2 class="text-xl font-bold text-slate-800">ยืนยันตัวตนผู้สอน</h2>
+                    <p class="text-slate-500 text-sm">กรุณากรอกรหัสผ่านเพื่อจัดการระบบ</p>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">รหัสผ่านแอดมิน</label>
+                        <div class="relative group">
+                            <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="password" id="teacherPassword" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition outline-none bg-white text-center text-lg" placeholder="••••••" onkeyup="if(event.key === 'Enter') handleTeacherLogin()">
+                        </div>
+                    </div>
+                    
+                    <button onclick="handleTeacherLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-[0.98]">
+                        ยืนยันรหัสผ่าน
+                    </button>
+                    
+                    <button onclick="cancelTeacherLogin()" class="w-full text-slate-500 hover:text-slate-700 text-sm font-bold py-2">
+                        กลับหน้าหลัก
+                    </button>
                 </div>
             </div>
         </section>
@@ -504,89 +531,79 @@
         // --- AUTH SYSTEM (Direct Check) ---
         async function handleLogin() {
             const code = document.getElementById('stdCode').value.trim();
-
-            if (!code || code.length < 4) {
-                return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
-            }
-
+            if (!code) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสเข้าใช้งาน', 'warning');
+            
             const btn = document.getElementById('btnLogin');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
             btn.disabled = true;
 
-            // Admin Login
-            if (code === '99999') {
-                currentUser = { role: 'admin', name: 'Administrator' };
-                showSection('adminDashboard');
-                fetchLessonsForAdmin();
-                fetchStudentMonitor();
-                btn.innerHTML = '<span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>';
-                btn.disabled = false;
+            // Admin Trigger
+            if (code.toLowerCase() === 'admin') {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('teacherLoginSection').classList.remove('hidden');
+                document.getElementById('teacherPassword').focus();
+                btn.innerHTML = originalText; btn.disabled = false;
+                document.getElementById('stdCode').value = ''; // clear input
                 return;
+            }
+
+            // Normal Student Login
+            if (code.length < 4) {
+                btn.innerHTML = originalText; btn.disabled = false;
+                return Swal.fire('แจ้งเตือน', 'รหัสต้องมี 5 หลัก', 'warning');
             }
 
             try {
                 // Query student_progress table
-                const { data: user, error } = await dbClient.from('student_progress')
-                    .select('*')
-                    .eq('student_code', code)
-                    .maybeSingle();
+                const { data: user, error } = await dbClient.from('student_progress').select('*').eq('student_code', code).maybeSingle();
                 
                 if (error) throw error;
+                if (!user) throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ');
+
+                try { await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id); } catch(e){}
                 
-                if (!user) {
-                    throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ');
-                }
-
-                // Update last login (Silent)
-                dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id).then();
-
                 currentUser = user;
                 setupUserUI();
                 showSection('studentDashboard');
-
             } catch (err) {
                 console.error(err);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เข้าสู่ระบบไม่สำเร็จ',
-                    text: err.message || 'โปรดตรวจสอบรหัสอีกครั้ง',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#4f46e5'
-                });
+                Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบไม่สำเร็จ', text: err.message, confirmButtonColor: '#4f46e5' });
             } finally {
-                btn.innerHTML = '<span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>';
-                btn.disabled = false;
+                btn.innerHTML = originalText; btn.disabled = false;
             }
+        }
+
+        function handleTeacherLogin() {
+            const pass = document.getElementById('teacherPassword').value.trim();
+            if (pass === '99999') {
+                currentUser = { role: 'admin', name: 'Administrator' };
+                showSection('adminDashboard');
+                fetchLessonsForAdmin();
+                fetchStudentMonitor();
+                document.getElementById('teacherPassword').value = '';
+            } else {
+                Swal.fire('รหัสผ่านผิด', 'กรุณาลองใหม่อีกครั้ง', 'error');
+            }
+        }
+
+        function cancelTeacherLogin() {
+            document.getElementById('teacherLoginSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('teacherPassword').value = '';
         }
 
         function setupUserUI() {
             if (!currentUser.study_time) currentUser.study_time = {};
             if (!currentUser.completed_lessons) currentUser.completed_lessons = [];
-            
             const name = currentUser.student_name || 'นักเรียน';
-            const sClass = currentUser.student_class || '-';
-            const sNum = currentUser.student_number || '-';
-
-            document.getElementById('userDisplay').innerHTML = `${name} <span class="opacity-70 font-normal">(${sClass} #${sNum})</span>`;
+            const info = `${currentUser.student_class || ''} #${currentUser.student_number || ''}`;
+            document.getElementById('userDisplay').innerHTML = `${name} <span class="opacity-70 font-normal">(${info})</span>`;
             document.getElementById('userInfo').classList.remove('hidden');
         }
 
-        function logout() {
-            stopLessonTimer();
-            currentUser = null;
-            document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('stdCode').value = '';
-            showSection('loginSection');
-        }
-
-        function showSection(id) {
-            ['loginSection', 'studentDashboard', 'adminDashboard'].forEach(sid => {
-                document.getElementById(sid).classList.add('hidden');
-            });
-            document.getElementById(id).classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
-
+        function logout() { stopLessonTimer(); currentUser = null; document.getElementById('userInfo').classList.add('hidden'); document.getElementById('stdCode').value = ''; showSection('loginSection'); }
+        function showSection(id) { ['loginSection', 'teacherLoginSection', 'studentDashboard', 'adminDashboard'].forEach(sid => document.getElementById(sid).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); window.scrollTo(0, 0); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         // --- UI & LOGIC ---
