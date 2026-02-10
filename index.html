@@ -124,7 +124,7 @@
             <div class="w-16 h-16 border-4 border-indigo-200 border-dashed rounded-full animate-spin"></div>
             <div class="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <p class="mt-4 text-indigo-700 font-bold animate-pulse">กำลังโหลดข้อมูล...</p>
+        <p class="mt-4 text-indigo-700 font-bold animate-pulse">กำลังตรวจสอบข้อมูล...</p>
     </div>
 
     <!-- Header -->
@@ -165,56 +165,34 @@
     <!-- Main Content -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- 1. Login Section -->
+        <!-- 1. Login Section (UPDATED: 5-Digit Code Only) -->
         <section id="loginSection" class="max-w-md mx-auto fade-in" style="animation-delay: 0.1s;">
-            <div class="glass-card p-8 mt-10 relative overflow-hidden">
+            <div class="glass-card p-8 mt-16 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
                 
-                <div class="text-center mb-8">
+                <div class="text-center mb-10">
+                    <div class="bg-indigo-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-3xl shadow-inner">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">เข้าสู่ระบบห้องเรียน</h2>
-                    <p class="text-slate-500 text-sm">การเขียนรายงานโครงงานคอมพิวเตอร์</p>
+                    <p class="text-slate-500 text-sm">กรอกรหัสนักเรียน 5 หลักเพื่อเริ่มใช้งาน</p>
                 </div>
 
-                <div class="space-y-5">
+                <div class="space-y-6">
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">ชื่อ-นามสกุล</label>
-                        <div class="relative">
-                            <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400"></i>
-                            <input type="text" id="stdName" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none bg-slate-50 focus:bg-white" placeholder="เช่น เด็กชายรักดี มีวินัย">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">รหัสประจำตัวนักเรียน</label>
+                        <div class="relative group">
+                            <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-400 group-focus-within:text-indigo-500 transition"></i>
+                            <input type="tel" id="stdCode" maxlength="5" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition outline-none bg-white text-center text-lg font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-300" placeholder="XXXXX">
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">ระดับชั้น</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-layer-group absolute left-4 top-3.5 text-slate-400"></i>
-                                <select id="stdClass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white appearance-none">
-                                    <option value="">เลือกชั้น</option>
-                                    <option value="ม.4/1">ม.4/1</option>
-                                    <option value="ม.4/2">ม.4/2</option>
-                                    <option value="ม.4/3">ม.4/3</option>
-                                    <option value="ม.4/4">ม.4/4</option>
-                                    <option value="ม.4/5">ม.4/5</option>
-                                    <option value="ม.4/6">ม.4/6</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">เลขที่</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-arrow-down-1-9 absolute left-4 top-3.5 text-slate-400"></i>
-                                <input type="number" id="stdNumber" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white" placeholder="เช่น 15">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-95 flex justify-center items-center gap-2 mt-2">
-                        <span>เริ่มต้นเรียนรู้</span> <i class="fa-solid fa-arrow-right"></i>
+                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
+                        <span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
                     
                     <div class="text-center pt-2">
-                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน: เข้าสู่ระบบด้วยชื่อ <span class="font-mono text-indigo-400">admin</span> และเลขที่ <span class="font-mono text-indigo-400">9999</span></p>
+                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน ใช้รหัส: <span class="font-mono bg-slate-100 px-1 rounded">99999</span></p>
                     </div>
                 </div>
             </div>
@@ -341,6 +319,7 @@
                             <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-xs tracking-wider">
                                 <tr>
                                     <th class="p-4">ชั้น/เลขที่</th>
+                                    <th class="p-4">รหัสนักเรียน</th>
                                     <th class="p-4">ชื่อ-นามสกุล</th>
                                     <th class="p-4 text-center">บทที่จบ</th>
                                     <th class="p-4 text-center">เวลาเรียนรวม</th>
@@ -518,7 +497,7 @@
         // --- 1. CONFIGURATION ---
         const CONFIG = {
             appName: "การเขียนรายงานโครงงานคอมพิวเตอร์",
-            // เชื่อมต่อ Supabase ของคุณ
+            // เชื่อมต่อ Supabase
             supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
             supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydXZvdHdydWtycXd2YXVkYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzk3NTksImV4cCI6MjA4NDYxNTc1OX0.GkBklU6IxxNgpCZ3FmFdnAwqPGtJLbcyZxlO5YMD3PA',
             units: [
@@ -549,23 +528,20 @@
         window.onload = function() {
             initTopicGrid();
             initAdminSelect();
-            // Optional: Auto-login check can be added here
         };
 
         function showLoading(show) {
             document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
         }
 
-        // --- 4. AUTHENTICATION SYSTEM ---
+        // --- 4. AUTHENTICATION SYSTEM (UPDATED: 5 DIGIT CODE) ---
         async function handleLogin() {
-            const name = document.getElementById('stdName').value.trim();
-            const sClass = document.getElementById('stdClass').value.trim();
-            const code = document.getElementById('stdNumber').value.trim(); // Map UI 'เลขที่' to DB 'student_number'
+            const code = document.getElementById('stdCode').value.trim();
 
-            if (!name || !sClass || !code) return Swal.fire('แจ้งเตือน', 'กรุณากรอก ชื่อ, ชั้น และเลขที่ ให้ครบถ้วน', 'warning');
+            if (!code || code.length < 4) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
 
-            // Admin Bypass Logic
-            if (name.toLowerCase() === 'admin' && code === '9999') {
+            // Admin Login Bypass
+            if (code === '99999') {
                 currentUser = { role: 'admin', name: 'Administrator' };
                 showSection('adminDashboard');
                 fetchLessonsForAdmin();
@@ -575,40 +551,27 @@
 
             showLoading(true);
             try {
-                // Check existing user matching ALL fields
+                // Query using ONLY student_code in existing DB
                 let { data: user, error } = await dbClient.from('student_progress')
                     .select('*')
-                    .eq('student_name', name)
-                    .eq('student_number', code) // In DB this is likely 'เลขที่' based on old code
-                    .eq('student_class', sClass)
+                    .eq('student_code', code)
                     .maybeSingle();
 
+                if (error) throw error;
+
                 if (!user) {
-                    // Register new user
-                    const { data: newUser, error: err } = await dbClient.from('student_progress')
-                        .insert([{ 
-                            student_name: name, 
-                            student_class: sClass, 
-                            student_number: code, 
-                            study_time: {}, 
-                            completed_lessons: [],
-                            last_login: new Date()
-                        }])
-                        .select().single();
-                    
-                    if (err) throw err;
-                    user = newUser;
-                } else {
-                    // Update login timestamp
-                    await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
+                    throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ (กรุณาติดต่อครูผู้สอน)');
                 }
+
+                // Update login timestamp
+                await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
 
                 currentUser = user;
                 setupUserUI();
                 showSection('studentDashboard');
 
             } catch (err) {
-                Swal.fire('เกิดข้อผิดพลาด', 'เชื่อมต่อฐานข้อมูลล้มเหลว หรือ ข้อมูลไม่ถูกต้อง: ' + err.message, 'error');
+                Swal.fire('เข้าสู่ระบบไม่สำเร็จ', err.message, 'error');
             } finally {
                 showLoading(false);
             }
@@ -626,8 +589,7 @@
             stopLessonTimer();
             currentUser = null;
             document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('stdName').value = '';
-            document.getElementById('stdNumber').value = '';
+            document.getElementById('stdCode').value = '';
             showSection('loginSection');
         }
 
@@ -909,7 +871,7 @@
                 tb.innerHTML = '';
                 
                 if(!students.length) {
-                    tb.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">ยังไม่มีนักเรียนในระบบ</td></tr>';
+                    tb.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">ยังไม่มีนักเรียนในระบบ</td></tr>';
                 }
 
                 students.forEach((s, idx) => {
@@ -922,6 +884,7 @@
                                 <div class="font-bold text-slate-800">${s.student_class}</div>
                                 <div class="text-xs text-slate-400 font-mono">#${s.student_number}</div>
                             </td>
+                            <td class="p-4 font-mono text-indigo-600 font-bold tracking-wide">${s.student_code || '-'}</td>
                             <td class="p-4 font-medium text-slate-700">
                                 ${s.student_name}
                                 <div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ${lastActive}</div>
@@ -962,6 +925,7 @@
                         <div class="flex gap-4 mt-1 text-xs font-bold text-slate-500 uppercase tracking-wide">
                             <span><i class="fa-solid fa-layer-group"></i> ${s.student_class}</span>
                             <span><i class="fa-solid fa-hashtag"></i> เลขที่ ${s.student_number}</span>
+                            <span class="text-indigo-600"><i class="fa-solid fa-key"></i> Code: ${s.student_code || '-'}</span>
                         </div>
                     </div>
                 </div>
