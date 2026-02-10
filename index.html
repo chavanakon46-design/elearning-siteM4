@@ -92,16 +92,6 @@
             background-color: var(--primary);
             border-radius: 3px 3px 0 0;
         }
-
-        /* Device Preview Frame */
-        .preview-frame {
-            border: 8px solid #333;
-            border-radius: 20px;
-            background: #fff;
-            transition: width 0.3s ease;
-            margin: 0 auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800">
@@ -336,7 +326,10 @@
                         
                         <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-lg">
                             <button onclick="openAddStudentModal()" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-bold shadow-sm transition flex items-center gap-2">
-                                <i class="fa-solid fa-user-plus"></i> เพิ่มนักเรียน
+                                <i class="fa-solid fa-user-plus"></i> เพิ่ม
+                            </button>
+                            <button onclick="openMergeModal()" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm font-bold shadow-sm transition flex items-center gap-2">
+                                <i class="fa-solid fa-link"></i> เชื่อมโยงบัญชี
                             </button>
                             <div class="h-6 w-px bg-slate-300 mx-1"></div>
                             <select id="sortStudentSelect" onchange="fetchStudentMonitor()" class="bg-white border-0 text-sm font-medium text-slate-700 rounded-md py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-indigo-500 cursor-pointer outline-none">
@@ -492,10 +485,11 @@
         </div>
     </div>
 
-    <!-- Add Student Modal -->
+    <!-- Add/Edit Student Modal -->
     <div id="addStudentModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 fade-in">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-user-plus text-indigo-500"></i> เพิ่มนักเรียนใหม่</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-user-pen text-indigo-500"></i> <span id="modalStudentTitle">เพิ่มนักเรียนใหม่</span></h3>
+            <input type="hidden" id="editStudentId">
             <div class="space-y-4">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชื่อ-นามสกุล</label><input type="text" id="newStdName" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="เด็กชาย..."></div>
                 <div class="grid grid-cols-2 gap-3">
@@ -505,6 +499,31 @@
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-indigo-600">รหัสเข้าใช้งาน (5 หลัก)</label><input type="text" id="newStdCode" maxlength="5" class="w-full p-2 border-2 border-indigo-100 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-center font-bold tracking-widest" placeholder="XXXXX"></div>
             </div>
             <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100"><button onclick="closeModal('addStudentModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button><button onclick="saveStudentToDB()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition">บันทึก</button></div>
+        </div>
+    </div>
+
+    <!-- Merge Account Modal -->
+    <div id="mergeModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[85] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6">
+            <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-link text-orange-500"></i> เชื่อมโยงบัญชี (Merge)</h3>
+            <p class="text-sm text-slate-500 mb-6">โอนข้อมูลผลการเรียนจากบัญชีที่ซ้ำซ้อนมารวมกับบัญชีหลัก แล้วลบบัญชีเก่าทิ้ง</p>
+            
+            <div class="space-y-6">
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                    <label class="block text-xs font-bold text-red-600 uppercase mb-2">1. บัญชีต้นทาง (จะถูกลบ)</label>
+                    <select id="mergeSource" class="w-full p-3 border rounded-lg outline-none text-sm"></select>
+                </div>
+                <div class="flex justify-center -my-3 relative z-10"><div class="bg-white p-2 rounded-full border shadow-sm"><i class="fa-solid fa-arrow-down text-slate-400"></i></div></div>
+                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                    <label class="block text-xs font-bold text-green-600 uppercase mb-2">2. บัญชีปลายทาง (เก็บไว้)</label>
+                    <select id="mergeTarget" class="w-full p-3 border rounded-lg outline-none text-sm"></select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100">
+                <button onclick="closeModal('mergeModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button>
+                <button onclick="executeMerge()" class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold shadow-md transition">ยืนยันการเชื่อมโยง</button>
+            </div>
         </div>
     </div>
 
@@ -521,6 +540,7 @@
 
         window.onload = function() { initTopicGrid(); initAdminSelect(); };
 
+        // --- AUTH SYSTEM (Direct Check) ---
         async function handleLogin() {
             const code = document.getElementById('stdCode').value.trim();
             if (!code) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสเข้าใช้งาน', 'warning');
@@ -740,7 +760,19 @@
                 students.forEach((s, i) => {
                     const comp = s.completed_lessons ? s.completed_lessons.length : 0;
                     const active = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'}) : '-';
-                    tb.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-50"><td class="p-4"><div class="font-bold text-slate-800">${s.student_class||'-'}</div><div class="text-xs text-slate-400">#${s.student_number}</div></td><td class="p-4 font-mono text-indigo-600 font-bold">${s.student_code||'-'}</td><td class="p-4 font-medium text-slate-700">${s.student_name}<div class="text-[10px] text-slate-400">ล่าสุด: ${active}</div></td><td class="p-4 text-center"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-bold">${comp} บท</span></td><td class="p-4 text-center text-xs font-mono">${Math.floor(s.totalTime/60)} น.</td><td class="p-4 text-center font-bold text-green-600">${s.totalScore}</td><td class="p-4 text-center flex gap-1 justify-center"><button onclick="viewStudentDetail(${i})" class="text-xs border px-2 py-1 rounded hover:bg-slate-100">ดูข้อมูล</button><button onclick="deleteStudent(${s.id})" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200">ลบ</button></td></tr>`;
+                    tb.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-50 group">
+                            <td class="p-4"><div class="font-bold text-slate-800">${s.student_class||'-'}</div><div class="text-xs text-slate-400">#${s.student_number}</div></td>
+                            <td class="p-4 font-mono text-indigo-600 font-bold">${s.student_code||'-'}</td>
+                            <td class="p-4 font-medium text-slate-700">${s.student_name}<div class="text-[10px] text-slate-400">ล่าสุด: ${active}</div></td>
+                            <td class="p-4 text-center text-xs font-mono">${Math.floor(s.totalTime/60)} น.</td>
+                            <td class="p-4 text-center font-bold text-green-600">${s.totalScore}</td>
+                            <td class="p-4 text-center flex gap-1 justify-center opacity-70 group-hover:opacity-100 transition">
+                                <button onclick="viewStudentDetail(${i})" class="text-xs bg-white border px-2 py-1 rounded hover:bg-slate-50" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
+                                <button onclick="openEditStudentModal(${i})" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteStudent(${s.id})" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>`;
                 });
             } catch (e) { console.error(e); }
         }
@@ -782,12 +814,111 @@
             document.getElementById('previewIframe').style.width = w;
         }
 
-        function openAddStudentModal() { ['newStdName','newStdNumber','newStdCode'].forEach(id=>document.getElementById(id).value=''); document.getElementById('addStudentModal').classList.remove('hidden'); }
+        // Add/Edit Student Logic
+        function openAddStudentModal() { 
+            ['newStdName','newStdNumber','newStdCode','editStudentId'].forEach(id=>document.getElementById(id).value=''); 
+            document.getElementById('modalStudentTitle').innerText = 'เพิ่มนักเรียนใหม่';
+            document.getElementById('addStudentModal').classList.remove('hidden'); 
+        }
+
+        function openEditStudentModal(idx) {
+            const s = monitorDataCache[idx];
+            document.getElementById('newStdName').value = s.student_name;
+            document.getElementById('newStdClass').value = s.student_class;
+            document.getElementById('newStdNumber').value = s.student_number;
+            document.getElementById('newStdCode').value = s.student_code;
+            document.getElementById('editStudentId').value = s.id;
+            document.getElementById('modalStudentTitle').innerText = 'แก้ไขข้อมูลนักเรียน';
+            document.getElementById('addStudentModal').classList.remove('hidden'); 
+        }
+
         async function saveStudentToDB() {
             const n = document.getElementById('newStdName').value.trim(), c = document.getElementById('newStdClass').value, num = document.getElementById('newStdNumber').value.trim(), code = document.getElementById('newStdCode').value.trim();
+            const editId = document.getElementById('editStudentId').value;
+
             if(!n || !num || code.length<4) return Swal.fire('Warning','กรอกข้อมูลให้ครบถ้วน','warning');
-            const { error } = await dbClient.from('student_progress').insert([{ student_name:n, student_class:c, student_number:num, student_code:code, study_time:{}, completed_lessons:[] }]);
-            if(error) Swal.fire('Error',error.message,'error'); else { Swal.fire('Success','เพิ่มนักเรียนแล้ว','success'); closeModal('addStudentModal'); fetchStudentMonitor(); }
+            
+            const payload = { student_name:n, student_class:c, student_number:num, student_code:code };
+            if(!editId) {
+                // Add New defaults
+                payload.study_time = {};
+                payload.completed_lessons = [];
+            }
+
+            const { error } = editId 
+                ? await dbClient.from('student_progress').update(payload).eq('id', editId)
+                : await dbClient.from('student_progress').insert([payload]);
+
+            if(error) Swal.fire('Error',error.message,'error'); else { Swal.fire('Success','บันทึกเรียบร้อย','success'); closeModal('addStudentModal'); fetchStudentMonitor(); }
+        }
+
+        // Merge Logic
+        function openMergeModal() {
+            // Populate Dropdowns
+            const src = document.getElementById('mergeSource');
+            const tgt = document.getElementById('mergeTarget');
+            src.innerHTML = ''; tgt.innerHTML = '';
+            
+            monitorDataCache.forEach(s => {
+                const txt = `${s.student_name} (${s.student_class} #${s.student_number}) [${s.student_code}]`;
+                const opt = `<option value="${s.id}">${txt}</option>`;
+                src.innerHTML += opt;
+                tgt.innerHTML += opt;
+            });
+            document.getElementById('mergeModal').classList.remove('hidden');
+        }
+
+        async function executeMerge() {
+            const sId = document.getElementById('mergeSource').value;
+            const tId = document.getElementById('mergeTarget').value;
+
+            if(sId === tId) return Swal.fire('Warning', 'ต้องเลือกบัญชีที่แตกต่างกัน', 'warning');
+
+            const res = await Swal.fire({ 
+                title: 'ยืนยันการรวมบัญชี?', 
+                text: 'ข้อมูลจากบัญชีต้นทางจะถูกย้ายไปปลายทาง และบัญชีต้นทางจะถูกลบถาวร', 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#f97316',
+                confirmButtonText: 'ยืนยันการรวม' 
+            });
+
+            if(!res.isConfirmed) return;
+
+            try {
+                // 1. Move Quiz Results
+                await dbClient.from('quiz_results').update({ student_id: tId }).eq('student_id', sId);
+
+                // 2. Merge Progress
+                const { data: source } = await dbClient.from('student_progress').select('*').eq('id', sId).single();
+                const { data: target } = await dbClient.from('student_progress').select('*').eq('id', tId).single();
+
+                // Merge time
+                const newTime = { ...target.study_time };
+                if(source.study_time) {
+                    for (const [k, v] of Object.entries(source.study_time)) {
+                        newTime[k] = (newTime[k] || 0) + v;
+                    }
+                }
+
+                // Merge Completed Lessons
+                const sComp = source.completed_lessons || [];
+                const tComp = target.completed_lessons || [];
+                const newComp = [...new Set([...tComp, ...sComp])];
+
+                // Update Target
+                await dbClient.from('student_progress').update({ study_time: newTime, completed_lessons: newComp }).eq('id', tId);
+
+                // 3. Delete Source
+                await dbClient.from('student_progress').delete().eq('id', sId);
+
+                Swal.fire('Success', 'รวมบัญชีเรียบร้อยแล้ว', 'success');
+                closeModal('mergeModal');
+                fetchStudentMonitor();
+
+            } catch(e) {
+                Swal.fire('Error', e.message, 'error');
+            }
         }
 
         async function fetchLessonsForAdmin() {
