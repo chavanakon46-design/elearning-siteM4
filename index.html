@@ -76,10 +76,10 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Loading Overlay (Adjusted Z-Index to be lower than SweetAlert) */
+        /* Loading Overlay */
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.95); z-index: 50; /* Lowered from 9999 */
+            background: rgba(255,255,255,0.95); z-index: 50; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             backdrop-filter: blur(5px);
         }
@@ -110,8 +110,8 @@
             <div class="w-16 h-16 border-4 border-indigo-200 border-dashed rounded-full animate-spin"></div>
             <div class="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <p class="mt-4 text-indigo-700 font-bold animate-pulse">กำลังเชื่อมต่อฐานข้อมูล...</p>
-        <p class="text-xs text-slate-400 mt-2">กรุณารอสักครู่</p>
+        <p class="mt-4 text-indigo-700 font-bold animate-pulse">กำลังตรวจสอบข้อมูล...</p>
+        <p class="text-xs text-slate-400 mt-2">กำลังเชื่อมต่อตาราง student_progress...</p>
     </div>
 
     <!-- Header -->
@@ -490,12 +490,11 @@
             document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
         }
 
-        // --- 4. AUTHENTICATION SYSTEM (Fixed for EXISTING Database 'students') ---
+        // --- 4. AUTHENTICATION SYSTEM (Fixed Table: student_progress) ---
         async function handleLogin() {
             const code = document.getElementById('stdCode').value.trim();
 
             if (!code || code.length < 4) {
-                // Ensure overlay is hidden before alert
                 showLoading(false);
                 return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
             }
@@ -511,9 +510,8 @@
 
             showLoading(true);
             try {
-                // IMPORTANT: Changed table name to 'students' (Original DB)
-                // Also querying 'student_number' as fallback in case user meant the old ID
-                let { data: user, error } = await dbClient.from('students')
+                // FIXED: Changed table name to 'student_progress' (Corrected from screenshot)
+                let { data: user, error } = await dbClient.from('student_progress')
                     .select('*')
                     .or(`student_code.eq.${code},student_number.eq.${code}`) 
                     .maybeSingle();
@@ -524,19 +522,18 @@
                     throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ (กรุณาติดต่อครูผู้สอน)');
                 }
 
-                // Try to update login time (Fail silently if column 'last_login' missing)
                 try {
-                    await dbClient.from('students').update({ last_login: new Date() }).eq('id', user.id);
+                    await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
                 } catch(e) { console.warn('Update last_login failed (Optional column)'); }
 
                 currentUser = user;
                 setupUserUI();
                 
-                showLoading(false); // Hide before transition
+                showLoading(false);
                 showSection('studentDashboard');
 
             } catch (err) {
-                showLoading(false); // Ensure hidden before alert
+                showLoading(false);
                 console.error(err);
                 Swal.fire({
                     icon: 'error',
@@ -549,12 +546,11 @@
         }
 
         function setupUserUI() {
-            // Handle missing columns gracefully
             if (!currentUser.study_time) currentUser.study_time = {};
             if (!currentUser.completed_lessons) currentUser.completed_lessons = [];
             
-            // Note: DB uses 'name' (from VUE code) or 'student_name' (from SQL script). Try both.
-            const name = currentUser.name || currentUser.student_name || 'นักเรียน';
+            // Prioritize correct column names based on user feedback
+            const name = currentUser.student_name || currentUser.name || 'นักเรียน';
             const sClass = currentUser.student_class || '-';
             const sNum = currentUser.student_number || '-';
 
@@ -671,10 +667,9 @@
                 timerEl.querySelector('span').innerText = `${m}:${s}`;
             }, 1000);
 
-            // Try to mark completed (safe fail if column missing)
             if (currentUser.completed_lessons && !currentUser.completed_lessons.includes(currentLesson.id)) {
                 currentUser.completed_lessons.push(currentLesson.id);
-                dbClient.from('students').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then().catch(e=>{});
+                dbClient.from('student_progress').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then().catch(e=>{});
             }
         }
 
@@ -686,8 +681,7 @@
                 if (currentUser && currentLesson && currentUser.study_time) {
                     const oldTime = currentUser.study_time[currentLesson.category] || 0;
                     currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
-                    // Save time to DB (safe fail)
-                    await dbClient.from('students').update({ study_time: currentUser.study_time }).eq('id', currentUser.id).catch(e=>{});
+                    await dbClient.from('student_progress').update({ study_time: currentUser.study_time }).eq('id', currentUser.id).catch(e=>{});
                 }
                 studyTimer = null;
             }
@@ -766,7 +760,6 @@
             const passed = (score / total) >= 0.5;
 
             try {
-                // Save Result
                 await dbClient.from('quiz_results').insert([{
                     student_id: currentUser.id, 
                     lesson_id: currentLesson.id, 
@@ -813,8 +806,8 @@
         async function fetchStudentMonitor() {
             showLoading(true);
             try {
-                // Use 'students' table (Changed from student_progress)
-                let { data: students } = await dbClient.from('students').select('*');
+                // FIXED: Changed table name to 'student_progress'
+                let { data: students } = await dbClient.from('student_progress').select('*');
                 
                 const { data: results } = await dbClient.from('quiz_results').select('student_id, score');
 
@@ -824,9 +817,8 @@
                     let totalTime = 0;
                     if(s.study_time) Object.values(s.study_time).forEach(v => totalTime += v);
                     
-                    // Normalize fields from possible varied column names
-                    s.name = s.name || s.student_name; 
-                    s.student_number = s.student_number; // Keep logic
+                    s.name = s.student_name; 
+                    s.student_number = s.student_number; 
 
                     return { ...s, totalScore, totalTime };
                 });
@@ -861,7 +853,7 @@
                             </td>
                             <td class="p-4 font-mono text-indigo-600 font-bold tracking-wide">${s.student_code || '-'}</td>
                             <td class="p-4 font-medium text-slate-700">
-                                ${s.name || 'ไม่ระบุชื่อ'}
+                                ${s.student_name || 'ไม่ระบุชื่อ'}
                                 <div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ${lastActive}</div>
                             </td>
                             <td class="p-4 text-center">
@@ -893,10 +885,10 @@
             document.getElementById('admDetailHeader').innerHTML = `
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">
-                        ${(s.name || '?').charAt(0)}
+                        ${(s.student_name || '?').charAt(0)}
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">${s.name}</h2>
+                        <h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2>
                         <div class="flex gap-4 mt-1 text-xs font-bold text-slate-500 uppercase tracking-wide">
                             <span><i class="fa-solid fa-layer-group"></i> ${s.student_class || '-'}</span>
                             <span><i class="fa-solid fa-hashtag"></i> เลขที่ ${s.student_number || '-'}</span>
