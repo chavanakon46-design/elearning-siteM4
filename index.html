@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- Custom Theme Overrides --- */
+        /* --- Theme Configuration --- */
         :root {
             --primary: #4f46e5;
             --secondary: #6366f1;
@@ -24,22 +24,24 @@
             font-family: 'Sarabun', sans-serif;
             background-color: var(--bg-color);
             color: #1e293b;
+            scroll-behavior: smooth;
         }
 
         /* Glassmorphism & Cards */
         .glass-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             border-radius: 1rem;
+            transition: all 0.3s ease;
         }
 
         .menu-card {
-            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            border-left: 5px solid transparent;
+            border-left: 4px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .menu-card:hover {
@@ -52,7 +54,7 @@
             position: absolute;
             right: -20px;
             bottom: -20px;
-            font-size: 8rem;
+            font-size: 7rem;
             opacity: 0.05;
             color: var(--primary);
             z-index: 0;
@@ -65,114 +67,154 @@
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Utilities */
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        /* Animation Utilities */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .status-badge {
-            @apply px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
-        }
-
+        
         /* Loading Overlay */
         #loadingOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
+            background: rgba(255,255,255,0.9); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             backdrop-filter: blur(5px);
+        }
+
+        /* Tab Styles */
+        .tab-btn {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            background-color: #eef2ff;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* Responsive Video */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col text-slate-800">
 
     <!-- Loading Spinner -->
     <div id="loadingOverlay" class="hidden">
-        <div class="flex flex-col items-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
-            <p class="text-indigo-600 font-bold animate-pulse">กำลังโหลดข้อมูล...</p>
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-indigo-200 border-dashed rounded-full animate-spin"></div>
+            <div class="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
+        <p class="mt-4 text-indigo-700 font-bold animate-pulse">กำลังโหลดข้อมูล...</p>
     </div>
 
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-lg">
-                    <i class="fa-solid fa-book-open text-2xl"></i>
+    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo Area -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="location.reload()">
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-600 text-white w-10 h-10 rounded-lg flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold text-slate-800 leading-tight">KRU DREAM E-Learning</h1>
-                    <p class="text-xs text-slate-500 font-medium">การเขียนรายงานโครงงานคอมพิวเตอร์</p>
+                <div class="hidden sm:block">
+                    <h1 class="text-lg font-bold text-slate-800 leading-tight">KRU DREAM</h1>
+                    <p class="text-[10px] text-slate-500 font-semibold tracking-wide uppercase">E-Learning Platform</p>
                 </div>
             </div>
 
+            <!-- User Info Area -->
             <div id="userInfo" class="hidden flex items-center gap-4">
-                <div class="hidden md:block text-right">
-                    <div id="userDisplay" class="text-sm font-bold text-indigo-700"></div>
-                    <div id="timerDisplay" class="text-xs text-slate-500 font-mono hidden">
-                        <i class="fa-regular fa-clock"></i> <span>00:00</span>
+                <div class="text-right hidden md:block">
+                    <div id="userDisplay" class="text-sm font-bold text-slate-700"></div>
+                    <div id="timerDisplay" class="text-xs text-indigo-600 font-mono font-bold hidden bg-indigo-50 px-2 py-0.5 rounded-full inline-block mt-0.5">
+                        <i class="fa-regular fa-clock mr-1"></i><span>00:00</span>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="openProfile()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-full transition relative group" title="ประวัติการเรียน">
-                        <i class="fa-solid fa-user-graduate"></i>
+                <div class="flex items-center gap-2 border-l pl-4 border-slate-200">
+                    <button onclick="openProfile()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 transition flex items-center justify-center relative group" title="ผลการเรียน">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-50 pointer-events-none">ผลการเรียน</span>
                     </button>
-                    <button onclick="logout()" class="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-full transition group" title="ออกจากระบบ">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <button onclick="logout()" class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition flex items-center justify-center relative group" title="ออกจากระบบ">
+                        <i class="fa-solid fa-power-off"></i>
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- 1. Login Section -->
-        <section id="loginSection" class="max-w-md mx-auto fade-in">
-            <div class="glass-card p-8 mt-10">
+        <section id="loginSection" class="max-w-md mx-auto fade-in" style="animation-delay: 0.1s;">
+            <div class="glass-card p-8 mt-10 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                
                 <div class="text-center mb-8">
-                    <div class="inline-block p-4 rounded-full bg-indigo-50 mb-4">
-                        <i class="fa-solid fa-school text-4xl text-indigo-600"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-slate-800">เข้าสู่ระบบห้องเรียน</h2>
-                    <p class="text-slate-500 text-sm">กรอกข้อมูลเพื่อเริ่มต้นบทเรียน</p>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">เข้าสู่ระบบห้องเรียน</h2>
+                    <p class="text-slate-500 text-sm">การเขียนรายงานโครงงานคอมพิวเตอร์</p>
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุล (ภาษาไทย)</label>
-                        <input type="text" id="stdName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" placeholder="เช่น เด็กชายรักดี มีวินัย">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">ระดับชั้น</label>
-                            <select id="stdClass" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <option value="">เลือกชั้น</option>
-                                <option value="ม.4/1">ม.4/1</option>
-                                <option value="ม.4/2">ม.4/2</option>
-                                <option value="ม.4/3">ม.4/3</option>
-                                <option value="ม.4/4">ม.4/4</option>
-                                <option value="ม.4/5">ม.4/5</option>
-                                <option value="ม.4/6">ม.4/6</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่</label>
-                            <input type="number" id="stdNumber" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="เช่น 15">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">ชื่อ-นามสกุล</label>
+                        <div class="relative">
+                            <i class="fa-regular fa-user absolute left-4 top-3.5 text-slate-400"></i>
+                            <input type="text" id="stdName" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none bg-slate-50 focus:bg-white" placeholder="เช่น เด็กชายรักดี มีวินัย">
                         </div>
                     </div>
                     
-                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-xl transition transform active:scale-95 flex justify-center items-center gap-2">
-                        <span>เข้าสู่บทเรียน</span> <i class="fa-solid fa-arrow-right"></i>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">ระดับชั้น</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-layer-group absolute left-4 top-3.5 text-slate-400"></i>
+                                <select id="stdClass" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white appearance-none">
+                                    <option value="">เลือกชั้น</option>
+                                    <option value="ม.4/1">ม.4/1</option>
+                                    <option value="ม.4/2">ม.4/2</option>
+                                    <option value="ม.4/3">ม.4/3</option>
+                                    <option value="ม.4/4">ม.4/4</option>
+                                    <option value="ม.4/5">ม.4/5</option>
+                                    <option value="ม.4/6">ม.4/6</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">เลขที่</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-arrow-down-1-9 absolute left-4 top-3.5 text-slate-400"></i>
+                                <input type="number" id="stdNumber" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white" placeholder="เช่น 15">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-95 flex justify-center items-center gap-2 mt-2">
+                        <span>เริ่มต้นเรียนรู้</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
-
-                    <div class="mt-4 text-center">
-                        <span class="text-xs text-slate-400">ระบบบันทึกความก้าวหน้าอัตโนมัติ</span>
+                    
+                    <div class="text-center pt-2">
+                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน: เข้าสู่ระบบด้วยชื่อ <span class="font-mono text-indigo-400">admin</span> และเลขที่ <span class="font-mono text-indigo-400">9999</span></p>
                     </div>
                 </div>
             </div>
@@ -180,11 +222,15 @@
 
         <!-- 2. Student Dashboard -->
         <section id="studentDashboard" class="hidden fade-in">
-            <!-- Main Menu (Lesson Selector) -->
+            <!-- Lesson Selector -->
             <div id="mainMenu">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-layer-group text-indigo-500 mr-2"></i> เลือกบทเรียน</h2>
-                    <div class="text-sm text-slate-500">บทเรียนทั้งหมด 5 บท</div>
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-book-bookmark text-indigo-500"></i> บทเรียนทั้งหมด
+                        </h2>
+                        <p class="text-slate-500 text-sm mt-1">เลือกบทเรียนเพื่อเริ่มศึกษาและทำแบบทดสอบ</p>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="topicGrid">
@@ -192,37 +238,45 @@
                 </div>
             </div>
 
-            <!-- Content Viewer (Learning & Quiz) -->
+            <!-- Content Viewer -->
             <div id="contentArea" class="hidden">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                    <div>
-                        <h2 id="lessonTitle" class="text-xl font-bold text-slate-800">หัวข้อบทเรียน</h2>
-                        <p class="text-sm text-slate-500">ศึกษาเนื้อหาให้ครบถ้วนก่อนทำแบบทดสอบ</p>
+                <!-- Navigation Bar -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <div>
+                            <h2 id="lessonTitle" class="text-lg font-bold text-slate-800 leading-tight">...</h2>
+                            <p class="text-xs text-slate-500">กรุณาศึกษาเนื้อหาให้ครบถ้วน</p>
+                        </div>
                     </div>
-                    <button onclick="backToDash()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-chevron-left"></i> กลับหน้าหลัก
+                    <button onclick="backToDash()" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-left"></i> กลับหน้าเมนู
                     </button>
                 </div>
 
-                <div class="glass-card overflow-hidden">
-                    <div class="flex border-b border-slate-200">
-                        <button id="tab-learn" class="flex-1 py-4 text-center font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition border-b-2 border-transparent" onclick="switchContentTab('learn')">
-                            <i class="fa-solid fa-book-reader mr-2"></i> เนื้อหาบทเรียน
+                <!-- Main Viewer -->
+                <div class="glass-card overflow-hidden min-h-[600px] flex flex-col">
+                    <!-- Tabs -->
+                    <div class="flex border-b border-slate-200 bg-slate-50/50">
+                        <button id="tab-learn" class="flex-1 py-4 text-center font-bold text-slate-500 hover:text-indigo-600 tab-btn active" onclick="switchContentTab('learn')">
+                            <i class="fa-solid fa-file-lines mr-2"></i> เนื้อหาบทเรียน
                         </button>
-                        <button id="tab-quiz" class="flex-1 py-4 text-center font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition border-b-2 border-transparent" onclick="switchContentTab('quiz')">
-                            <i class="fa-solid fa-pen-to-square mr-2"></i> แบบทดสอบท้ายหน่วย
+                        <button id="tab-quiz" class="flex-1 py-4 text-center font-bold text-slate-500 hover:text-indigo-600 tab-btn" onclick="switchContentTab('quiz')">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i> แบบทดสอบ
                         </button>
                     </div>
 
-                    <div class="p-6 md:p-8 min-h-[500px]">
-                        <!-- Learn View -->
-                        <div id="view-learn" class="prose max-w-none text-slate-700">
+                    <div class="p-6 md:p-8 flex-grow bg-white">
+                        <!-- Content View -->
+                        <div id="view-learn" class="prose max-w-none text-slate-700 fade-in">
                             <div id="lessonViewer" class="leading-relaxed"></div>
                         </div>
 
                         <!-- Quiz View -->
-                        <div id="view-quiz" class="hidden max-w-3xl mx-auto">
-                            <div id="quizArea" class="space-y-6"></div>
+                        <div id="view-quiz" class="hidden max-w-3xl mx-auto fade-in">
+                            <div id="quizArea" class="space-y-8"></div>
                         </div>
                     </div>
                 </div>
@@ -231,52 +285,62 @@
 
         <!-- 3. Admin Dashboard -->
         <section id="adminDashboard" class="hidden fade-in">
-            <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 rounded-xl shadow-lg mb-8 flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold mb-1"><i class="fa-solid fa-user-shield mr-2"></i> แผงควบคุมผู้สอน</h2>
-                    <p class="text-slate-300 text-sm">จัดการเนื้อหาและติดตามผลการเรียน</p>
+            <!-- Admin Header -->
+            <div class="bg-slate-800 text-white p-6 rounded-2xl shadow-lg mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/10 rounded-lg backdrop-blur-sm">
+                        <i class="fa-solid fa-user-shield text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">ระบบจัดการผู้สอน</h2>
+                        <p class="text-slate-300 text-sm">จัดการข้อมูลและติดตามผลการเรียน</p>
+                    </div>
                 </div>
-                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition">
-                    ออกจากระบบ Admin
+                <div class="flex gap-3">
+                    <button onclick="logout()" class="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg font-bold text-sm transition shadow-md">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex gap-2 mb-6 border-b border-slate-200 overflow-x-auto pb-1">
+                <button onclick="switchAdminTab('monitor')" id="adm-tab-monitor" class="px-6 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 whitespace-nowrap transition">
+                    <i class="fa-solid fa-chart-bar mr-2"></i> ติดตามผู้เรียน
+                </button>
+                <button onclick="switchAdminTab('content')" id="adm-tab-content" class="px-6 py-3 font-bold text-slate-500 hover:text-indigo-600 border-b-2 border-transparent whitespace-nowrap transition">
+                    <i class="fa-solid fa-file-pen mr-2"></i> จัดการเนื้อหา/ข้อสอบ
                 </button>
             </div>
 
-            <!-- Admin Tabs -->
-            <div class="flex gap-4 mb-6 border-b border-slate-200 pb-2">
-                <button onclick="switchAdminTab('monitor')" id="adm-tab-monitor" class="px-4 py-2 font-bold text-indigo-600 border-b-2 border-indigo-600 transition">
-                    ติดตามผู้เรียน
-                </button>
-                <button onclick="switchAdminTab('content')" id="adm-tab-content" class="px-4 py-2 font-bold text-slate-500 hover:text-indigo-600 border-b-2 border-transparent transition">
-                    จัดการเนื้อหา/ข้อสอบ
-                </button>
-            </div>
-
-            <!-- Tab: Monitor (Tracking) -->
-            <div id="admin-monitor-view">
+            <!-- Tab 1: Monitor -->
+            <div id="admin-monitor-view" class="fade-in">
                 <div class="glass-card p-6">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                        <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-list-ol mr-2"></i> รายชื่อนักเรียนและความก้าวหน้า</h3>
+                    <div class="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users-viewfinder text-indigo-500"></i> รายชื่อนักเรียนทั้งหมด
+                        </h3>
                         
-                        <div class="flex gap-2">
-                            <!-- Sorting Control -->
-                            <select id="sortStudentSelect" onchange="fetchStudentMonitor()" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-lg">
+                            <span class="text-xs font-bold text-slate-500 px-2">เรียงตาม:</span>
+                            <select id="sortStudentSelect" onchange="fetchStudentMonitor()" class="bg-white border-0 text-sm font-medium text-slate-700 rounded-md py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-indigo-500 cursor-pointer outline-none">
                                 <option value="recent">🕒 อัปเดตล่าสุด</option>
                                 <option value="score_desc">🏆 คะแนน (มาก -> น้อย)</option>
                                 <option value="score_asc">📉 คะแนน (น้อย -> มาก)</option>
                                 <option value="number_asc">🔢 เลขที่ (น้อย -> มาก)</option>
                                 <option value="number_desc">🔢 เลขที่ (มาก -> น้อย)</option>
                             </select>
-                            <button onclick="fetchStudentMonitor()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 transition">
-                                <i class="fa-solid fa-rotate"></i>
+                            <button onclick="fetchStudentMonitor()" class="p-2 bg-white text-indigo-600 rounded-md shadow-sm hover:bg-indigo-50 transition" title="รีเฟรชข้อมูล">
+                                <i class="fa-solid fa-rotate-right"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto rounded-lg border border-slate-200">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-xs tracking-wider">
                                 <tr>
-                                    <th class="p-4">เลขที่/ชั้น</th>
+                                    <th class="p-4">ชั้น/เลขที่</th>
                                     <th class="p-4">ชื่อ-นามสกุล</th>
                                     <th class="p-4 text-center">บทที่จบ</th>
                                     <th class="p-4 text-center">เวลาเรียนรวม</th>
@@ -285,61 +349,68 @@
                                 </tr>
                             </thead>
                             <tbody id="monitorTableBody" class="divide-y divide-slate-100 bg-white">
-                                <!-- Data Rows -->
+                                <!-- Data injected here -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Content Editor -->
-            <div id="admin-content-view" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Lesson List -->
-                <div class="glass-card p-4 h-[600px] overflow-y-auto">
-                    <button onclick="prepareNewLesson()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg mb-4 shadow transition">
-                        <i class="fa-solid fa-plus mr-1"></i> สร้างบทเรียนใหม่
+            <!-- Tab 2: Content Editor -->
+            <div id="admin-content-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 fade-in">
+                <!-- Lesson List (Sidebar) -->
+                <div class="lg:col-span-4 glass-card p-4 h-[650px] flex flex-col">
+                    <button onclick="prepareNewLesson()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl mb-4 shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> สร้างบทเรียนใหม่
                     </button>
-                    <div id="adminLessonList" class="space-y-2"></div>
+                    <div class="flex-grow overflow-y-auto pr-1 space-y-2" id="adminLessonList">
+                        <!-- List injected here -->
+                    </div>
                 </div>
 
-                <!-- Editor Form -->
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h3 class="text-lg font-bold mb-4 border-b pb-2">✏️ แก้ไขบทเรียน</h3>
-                    <input type="hidden" id="editId">
+                <!-- Editor Form (Main) -->
+                <div class="lg:col-span-8 glass-card p-6 h-[650px] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-pen-to-square text-indigo-500 mr-2"></i> แก้ไขบทเรียน</h3>
+                        <input type="hidden" id="editId">
+                    </div>
                     
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">หัวข้อบทเรียน</label>
-                            <input type="text" id="editTitle" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">หัวข้อบทเรียน</label>
+                            <input type="text" id="editTitle" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition" placeholder="เช่น บทที่ 1 บทนำ">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">หมวดหมู่ (ID)</label>
-                            <select id="editCategory" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
-                                <!-- Config Options -->
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">หมวดหมู่</label>
+                            <select id="editCategory" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition">
+                                <!-- Options injected -->
                             </select>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">เนื้อหา (HTML/Text/Youtube Embed)</label>
-                        <textarea id="editContent" class="w-full px-3 py-2 border rounded-lg h-40 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="<p>เนื้อหาบทเรียน...</p>"></textarea>
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">เนื้อหาบทเรียน (HTML)</label>
+                        <p class="text-[10px] text-slate-400 mb-1 ml-1">*รองรับ Text, Image URL, YouTube Embed Code</p>
+                        <textarea id="editContent" class="w-full px-4 py-3 border border-slate-200 rounded-lg h-48 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition leading-relaxed" placeholder="<p>ใส่เนื้อหาที่นี่...</p>"></textarea>
                     </div>
 
-                    <!-- Quiz Editor Section -->
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                    <!-- Quiz Editor -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 mb-6">
                         <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-bold text-slate-700">❓ จัดการข้อสอบ</h4>
-                            <button onclick="openQuestionModal()" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 transition">
+                            <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> ชุดข้อสอบ</h4>
+                            <button onclick="openQuestionModal()" class="text-xs bg-white border border-indigo-200 text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition font-bold shadow-sm">
                                 + เพิ่มข้อสอบ
                             </button>
                         </div>
-                        <div id="qList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
+                        <div id="qList" class="space-y-2 max-h-48 overflow-y-auto pr-2">
+                            <p class="text-center text-slate-400 text-sm py-4">ยังไม่มีข้อสอบ</p>
+                        </div>
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                        <button onclick="deleteLesson()" class="text-red-500 hover:text-red-700 px-4 py-2 text-sm font-bold">ลบบทเรียน</button>
-                        <button onclick="saveLessonToDB()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow transition">
-                            บันทึกข้อมูล
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 sticky bottom-0 bg-white">
+                        <button onclick="deleteLesson()" class="text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-bold transition">ลบบทเรียนนี้</button>
+                        <button onclick="saveLessonToDB()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-save"></i> บันทึกข้อมูล
                         </button>
                     </div>
                 </div>
@@ -349,34 +420,43 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
-            <p>&copy; 2024 KRU DREAM E-Learning Platform. All rights reserved.</p>
-        </div>
+    <footer class="mt-auto py-6 text-center text-slate-400 text-sm">
+        <p>&copy; 2024 KRU DREAM E-Learning System. All rights reserved.</p>
     </footer>
 
     <!-- ================= MODALS ================= -->
 
-    <!-- 1. Profile Modal -->
-    <div id="profileModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
-        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
-            <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-chart-line mr-2"></i> ผลการเรียนของฉัน</h3>
-                <button onclick="closeModal('profileModal')" class="hover:text-indigo-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- 1. Student Profile Modal -->
+    <div id="profileModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-indigo-600 p-5 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-id-card"></i> ผลการเรียนของฉัน</h3>
+                <button onclick="closeModal('profileModal')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6">
-                <div class="flex items-center gap-4 mb-6 bg-indigo-50 p-4 rounded-lg">
-                    <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-2xl"><i class="fa-solid fa-clock"></i></div>
-                    <div>
-                        <div class="text-xs text-slate-500 uppercase font-bold">เวลาเรียนสะสม</div>
-                        <div class="text-2xl font-bold text-slate-800"><span id="profileTotalTime">0</span> <span class="text-sm font-normal text-slate-500">นาที</span></div>
+            
+            <div class="p-6 overflow-y-auto">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center gap-3">
+                        <div class="bg-indigo-100 w-10 h-10 rounded-full flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div>
+                            <div class="text-xs text-slate-500 uppercase font-bold">เวลาเรียน</div>
+                            <div class="text-xl font-bold text-slate-800"><span id="profileTotalTime">0</span> <span class="text-sm font-normal text-slate-500">นาที</span></div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100 flex items-center gap-3">
+                        <div class="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600 text-xl"><i class="fa-solid fa-check-double"></i></div>
+                        <div>
+                            <div class="text-xs text-slate-500 uppercase font-bold">บทที่จบแล้ว</div>
+                            <div class="text-xl font-bold text-slate-800"><span id="profileCompletedCount">0</span> <span class="text-sm font-normal text-slate-500">บท</span></div>
+                        </div>
                     </div>
                 </div>
                 
-                <h4 class="font-bold text-slate-700 mb-2 border-b pb-2">ประวัติการทำแบบทดสอบ</h4>
-                <div class="overflow-y-auto max-h-60">
+                <h4 class="font-bold text-slate-800 mb-3 border-b pb-2">ประวัติการสอบล่าสุด</h4>
+                <div class="border rounded-xl overflow-hidden">
                     <table class="w-full text-sm text-left">
-                        <thead class="text-slate-500 bg-slate-50 sticky top-0"><tr><th class="p-2">วันที่</th><th class="p-2">บทเรียน</th><th class="p-2 text-center">คะแนน</th><th class="p-2 text-center">ผลลัพธ์</th></tr></thead>
+                        <thead class="bg-slate-50 text-slate-500 font-bold"><tr><th class="p-3">วันที่</th><th class="p-3">บทเรียน</th><th class="p-3 text-center">คะแนน</th><th class="p-3 text-center">ผลลัพธ์</th></tr></thead>
                         <tbody id="profileQuizTable" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
@@ -384,58 +464,61 @@
         </div>
     </div>
 
-    <!-- 2. Admin Detail Modal -->
-    <div id="adminDetailModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
-        <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <h3 class="font-bold text-lg"><i class="fa-solid fa-magnifying-glass-chart mr-2"></i> รายละเอียดนักเรียน</h3>
-                <button onclick="closeModal('adminDetailModal')" class="hover:text-slate-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- 2. Admin Student Detail Modal -->
+    <div id="adminDetailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-800 p-5 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-user-gear"></i> รายละเอียดนักเรียนรายบุคคล</h3>
+                <button onclick="closeModal('adminDetailModal')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto">
-                <div id="admDetailHeader" class="mb-6 pb-4 border-b border-slate-200"></div>
-                <table class="w-full text-sm text-left border rounded-lg overflow-hidden">
-                    <thead class="bg-slate-100 text-slate-700 font-bold uppercase">
-                        <tr>
-                            <th class="p-3">บทเรียน</th>
-                            <th class="p-3 text-center">สถานะการเรียน</th>
-                            <th class="p-3 text-center">เวลาเรียน (นาที)</th>
-                            <th class="p-3 text-center">คะแนนล่าสุด</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admDetailBody" class="divide-y divide-slate-100 bg-white"></tbody>
-                </table>
+            <div class="p-6 overflow-y-auto bg-slate-50">
+                <div id="admDetailHeader" class="mb-6 pb-4 border-b border-slate-200 bg-white p-4 rounded-xl shadow-sm"></div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">บทเรียน</th>
+                                <th class="p-4 text-center">สถานะการเรียน</th>
+                                <th class="p-4 text-center">เวลาเรียน (นาที)</th>
+                                <th class="p-4 text-center">คะแนนล่าสุด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admDetailBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 3. Question Editor Modal -->
     <div id="questionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 fade-in">
-        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6">
-            <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-circle-question text-indigo-500 mr-2"></i> สร้าง/แก้ไขคำถาม</h3>
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 transform scale-100 transition-all">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-circle-question text-indigo-500"></i> สร้าง/แก้ไขคำถาม</h3>
             
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">โจทย์คำถาม</label>
-            <textarea id="qInputText" class="w-full p-3 border rounded-lg mb-4 h-24 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="พิมพ์โจทย์..."></textarea>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">โจทย์คำถาม</label>
+            <textarea id="qInputText" class="w-full p-3 border border-slate-200 rounded-xl mb-4 h-24 focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition resize-none" placeholder="พิมพ์โจทย์คำถามที่นี่..."></textarea>
             
             <div class="flex justify-between items-center mb-2">
-                <label class="text-xs font-bold text-slate-500 uppercase">ตัวเลือกคำตอบ (ติ๊กถูกหน้าข้อที่ถูก)</label>
-                <button onclick="addOptionInput()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition font-bold">+ เพิ่มช้อยส์</button>
+                <label class="text-xs font-bold text-slate-500 uppercase">ตัวเลือกคำตอบ (ติ๊กวงกลมหน้าข้อถูก)</label>
+                <button onclick="addOptionInput()" class="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-md hover:bg-green-100 transition font-bold border border-green-200">+ เพิ่มตัวเลือก</button>
             </div>
             
-            <div id="optionInputsContainer" class="space-y-2 max-h-48 overflow-y-auto mb-6 pr-1"></div>
+            <div id="optionInputsContainer" class="space-y-2 max-h-60 overflow-y-auto mb-6 pr-1 custom-scrollbar"></div>
 
-            <div class="flex justify-end gap-3">
-                <button onclick="closeModal('questionModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg">ยกเลิก</button>
-                <button onclick="saveQuestionToMemory()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow">ยืนยัน</button>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button onclick="closeModal('questionModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button>
+                <button onclick="saveQuestionToMemory()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition">ยืนยันข้อมูล</button>
             </div>
         </div>
     </div>
 
-    <!-- Script Logic -->
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // ================= CONFIGURATION =================
+        // --- 1. CONFIGURATION ---
         const CONFIG = {
             appName: "การเขียนรายงานโครงงานคอมพิวเตอร์",
-            // ใส่ Key ของคุณที่นี่ (ตามที่ให้มา)
+            // เชื่อมต่อ Supabase ของคุณ
             supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
             supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydXZvdHdydWtycXd2YXVkYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzk3NTksImV4cCI6MjA4NDYxNTc1OX0.GkBklU6IxxNgpCZ3FmFdnAwqPGtJLbcyZxlO5YMD3PA',
             units: [
@@ -447,7 +530,7 @@
             ]
         };
 
-        // ================= STATE & INIT =================
+        // --- 2. GLOBAL VARIABLES ---
         let dbClient;
         let currentUser = null;
         let currentLesson = null;
@@ -456,52 +539,49 @@
         let editingQuizData = [];
         let allLessonsCache = [];
         let editingQuestionIndex = -1;
-        let monitorDataCache = []; // Store for sorting
+        let monitorDataCache = []; 
 
+        // --- 3. INITIALIZATION ---
         try {
             dbClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-        } catch (e) { Swal.fire('Error', 'DB Connect Failed', 'error'); }
+        } catch (e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
 
         window.onload = function() {
             initTopicGrid();
             initAdminSelect();
-            checkSession();
+            // Optional: Auto-login check can be added here
         };
-
-        function checkSession() {
-            // Optional: Auto login if implement localstorage later
-        }
 
         function showLoading(show) {
             document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
         }
 
-        // ================= AUTHENTICATION =================
+        // --- 4. AUTHENTICATION SYSTEM ---
         async function handleLogin() {
             const name = document.getElementById('stdName').value.trim();
             const sClass = document.getElementById('stdClass').value.trim();
-            const code = document.getElementById('stdNumber').value.trim();
+            const code = document.getElementById('stdNumber').value.trim(); // Map UI 'เลขที่' to DB 'student_number'
 
-            if (!name || !sClass || !code) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบทุกช่อง', 'warning');
+            if (!name || !sClass || !code) return Swal.fire('แจ้งเตือน', 'กรุณากรอก ชื่อ, ชั้น และเลขที่ ให้ครบถ้วน', 'warning');
 
-            // Admin Bypass
+            // Admin Bypass Logic
             if (name.toLowerCase() === 'admin' && code === '9999') {
                 currentUser = { role: 'admin', name: 'Administrator' };
                 showSection('adminDashboard');
                 fetchLessonsForAdmin();
-                fetchStudentMonitor(); // Load initial data
+                fetchStudentMonitor();
                 return;
             }
 
             showLoading(true);
             try {
-                // Check existing user
+                // Check existing user matching ALL fields
                 let { data: user, error } = await dbClient.from('student_progress')
                     .select('*')
                     .eq('student_name', name)
-                    .eq('student_number', code)
+                    .eq('student_number', code) // In DB this is likely 'เลขที่' based on old code
                     .eq('student_class', sClass)
-                    .single();
+                    .maybeSingle();
 
                 if (!user) {
                     // Register new user
@@ -519,7 +599,7 @@
                     if (err) throw err;
                     user = newUser;
                 } else {
-                    // Update login time
+                    // Update login timestamp
                     await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
                 }
 
@@ -528,7 +608,7 @@
                 showSection('studentDashboard');
 
             } catch (err) {
-                Swal.fire('Error', err.message, 'error');
+                Swal.fire('เกิดข้อผิดพลาด', 'เชื่อมต่อฐานข้อมูลล้มเหลว หรือ ข้อมูลไม่ถูกต้อง: ' + err.message, 'error');
             } finally {
                 showLoading(false);
             }
@@ -538,7 +618,7 @@
             if (!currentUser.study_time) currentUser.study_time = {};
             if (!currentUser.completed_lessons) currentUser.completed_lessons = [];
             
-            document.getElementById('userDisplay').innerHTML = `<i class="fa-solid fa-circle-user mr-1"></i> ${currentUser.student_name} (${currentUser.student_class} เลขที่ ${currentUser.student_number})`;
+            document.getElementById('userDisplay').innerHTML = `${currentUser.student_name} <span class="opacity-70 font-normal">(${currentUser.student_class} #${currentUser.student_number})</span>`;
             document.getElementById('userInfo').classList.remove('hidden');
         }
 
@@ -551,7 +631,6 @@
             showSection('loginSection');
         }
 
-        // ================= NAVIGATION & UI =================
         function showSection(id) {
             ['loginSection', 'studentDashboard', 'adminDashboard'].forEach(sid => {
                 document.getElementById(sid).classList.add('hidden');
@@ -560,23 +639,22 @@
             window.scrollTo(0, 0);
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+        // --- 5. UI GENERATION ---
         function initTopicGrid() {
             const grid = document.getElementById('topicGrid');
             grid.innerHTML = '';
             CONFIG.units.forEach((u, idx) => {
                 grid.innerHTML += `
-                    <div onclick="loadLessonGroup('${u.id}')" class="menu-card glass-card p-6 cursor-pointer bg-white group h-40 flex flex-col justify-center">
+                    <div onclick="loadLessonGroup('${u.id}')" class="menu-card glass-card p-6 cursor-pointer bg-white group h-48 flex flex-col justify-center relative">
                         <i class="fa-solid ${u.icon} menu-bg-icon"></i>
-                        <div class="relative z-10">
-                            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Chapter 0${idx + 1}</span>
-                            <h3 class="text-lg font-bold text-slate-800 mt-1 group-hover:text-indigo-600 transition">${u.title}</h3>
-                            <div class="mt-3 flex items-center text-xs text-slate-500">
-                                <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md group-hover:bg-indigo-600 group-hover:text-white transition">คลิกเพื่อเรียน</span>
-                            </div>
+                        <div class="relative z-10 pl-2 border-l-4 border-indigo-100 group-hover:border-indigo-500 transition-all pl-4">
+                            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider block mb-1">Chapter 0${idx + 1}</span>
+                            <h3 class="text-xl font-bold text-slate-800 leading-tight group-hover:text-indigo-700 transition">${u.title}</h3>
+                            <button class="mt-4 text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full group-hover:bg-indigo-600 group-hover:text-white transition flex items-center gap-2 w-fit">
+                                <span>เข้าสู่บทเรียน</span> <i class="fa-solid fa-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -586,23 +664,22 @@
         function initAdminSelect() {
             const sel = document.getElementById('editCategory');
             sel.innerHTML = '';
-            CONFIG.units.forEach(u => {
-                sel.innerHTML += `<option value="${u.id}">${u.title}</option>`;
-            });
+            CONFIG.units.forEach(u => sel.innerHTML += `<option value="${u.id}">${u.title}</option>`);
         }
 
-        // ================= STUDENT LEARNING LOGIC =================
+        // --- 6. LEARNING LOGIC ---
         async function loadLessonGroup(catId) {
             showLoading(true);
             try {
-                const { data } = await dbClient.from('lessons').select('*').eq('category', catId).single();
+                // Fetch content for this category
+                const { data } = await dbClient.from('lessons').select('*').eq('category', catId).maybeSingle();
                 
-                if (!data) return Swal.fire('ขออภัย', 'เนื้อหาบทเรียนนี้ยังไม่เปิดใช้งาน (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
+                if (!data) return Swal.fire('ขออภัย', 'บทเรียนนี้ยังไม่มีเนื้อหา (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
 
                 currentLesson = data;
                 document.getElementById('mainMenu').classList.add('hidden');
                 document.getElementById('contentArea').classList.remove('hidden');
-                document.getElementById('lessonTitle').innerHTML = `<span class="text-indigo-600 mr-2">#${catId}</span> ${currentLesson.title}`;
+                document.getElementById('lessonTitle').innerHTML = currentLesson.title;
                 
                 switchContentTab('learn');
             } catch (err) {
@@ -619,19 +696,14 @@
             const viewQuiz = document.getElementById('view-quiz');
 
             if (tab === 'learn') {
-                btnLearn.classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
-                btnQuiz.classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
-                viewLearn.classList.remove('hidden');
-                viewQuiz.classList.add('hidden');
+                btnLearn.classList.add('active'); btnQuiz.classList.remove('active');
+                viewLearn.classList.remove('hidden'); viewQuiz.classList.add('hidden');
                 
-                // Render Content
-                document.getElementById('lessonViewer').innerHTML = currentLesson.content || '<p class="text-center text-slate-400 py-10">ไม่พบเนื้อหา</p>';
+                document.getElementById('lessonViewer').innerHTML = currentLesson.content || '<div class="text-center py-10 text-slate-400">ไม่พบเนื้อหา</div>';
                 startTimer();
             } else {
-                btnQuiz.classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
-                btnLearn.classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
-                viewQuiz.classList.remove('hidden');
-                viewLearn.classList.add('hidden');
+                btnQuiz.classList.add('active'); btnLearn.classList.remove('active');
+                viewQuiz.classList.remove('hidden'); viewLearn.classList.add('hidden');
                 
                 stopLessonTimer();
                 renderStudentQuiz();
@@ -644,7 +716,6 @@
             document.getElementById('mainMenu').classList.remove('hidden');
         }
 
-        // ================= TIMER LOGIC =================
         function startTimer() {
             stopLessonTimer();
             secondsSpent = 0;
@@ -658,10 +729,10 @@
                 timerEl.querySelector('span').innerText = `${m}:${s}`;
             }, 1000);
 
-            // Mark as completed in array if not exists
+            // Mark completed locally (synced later)
             if (!currentUser.completed_lessons.includes(currentLesson.id)) {
                 currentUser.completed_lessons.push(currentLesson.id);
-                // Sync status quietly
+                // Silent sync
                 dbClient.from('student_progress').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then();
             }
         }
@@ -674,31 +745,27 @@
                 if (currentUser && currentLesson) {
                     const oldTime = currentUser.study_time[currentLesson.category] || 0;
                     currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
-                    // Save to DB
+                    // Save time to DB
                     await dbClient.from('student_progress').update({ study_time: currentUser.study_time }).eq('id', currentUser.id);
                 }
                 studyTimer = null;
             }
         }
 
-        // ================= QUIZ SYSTEM =================
+        // --- 7. QUIZ LOGIC ---
         function renderStudentQuiz() {
             const div = document.getElementById('quizArea');
             div.innerHTML = '';
             
             if (!currentLesson.quiz_data || !currentLesson.quiz_data.length) {
-                div.innerHTML = `
-                    <div class="text-center py-10">
-                        <i class="fa-solid fa-clipboard-list text-4xl text-slate-300 mb-4"></i>
-                        <p class="text-slate-500">ยังไม่มีแบบทดสอบในบทเรียนนี้</p>
-                    </div>`;
+                div.innerHTML = `<div class="text-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-300"><i class="fa-solid fa-clipboard-question text-4xl text-slate-300 mb-2"></i><p class="text-slate-500">บทเรียนนี้ยังไม่มีแบบทดสอบ</p></div>`;
                 return;
             }
 
             div.innerHTML = `
-                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg mb-6">
-                    <h3 class="font-bold text-indigo-800">คำชี้แจง</h3>
-                    <p class="text-sm text-indigo-600">แบบทดสอบมีทั้งหมด ${currentLesson.quiz_data.length} ข้อ เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว</p>
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg mb-6">
+                    <h3 class="font-bold text-indigo-900">คำชี้แจงการสอบ</h3>
+                    <p class="text-sm text-indigo-700">ข้อสอบมีจำนวน ${currentLesson.quiz_data.length} ข้อ | เกณฑ์ผ่าน 50%</p>
                 </div>
             `;
 
@@ -706,24 +773,30 @@
                 let opts = '';
                 q.options.forEach((o, oi) => {
                     opts += `
-                        <label class="flex items-center p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 hover:border-indigo-300 transition">
-                            <input type="radio" name="q_${i}" value="${oi}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                            <span class="ml-3 text-slate-700 text-sm">${o}</span>
+                        <label class="flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition group">
+                            <div class="relative flex items-center">
+                                <input type="radio" name="q_${i}" value="${oi}" class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-indigo-600 checked:bg-indigo-600 transition-all">
+                                <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100">
+                                    <i class="fa-solid fa-check text-[10px]"></i>
+                                </div>
+                            </div>
+                            <span class="ml-3 text-slate-700 font-medium group-hover:text-indigo-900">${o}</span>
                         </label>
                     `;
                 });
                 
                 div.innerHTML += `
-                    <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-                        <p class="font-bold text-slate-800 mb-4"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs mr-2">ข้อ ${i+1}</span> ${q.question}</p>
-                        <div class="space-y-2">${opts}</div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-slate-200"></div>
+                        <p class="font-bold text-slate-800 mb-4 text-lg"><span class="text-slate-400 mr-2">Q${i+1}.</span> ${q.question}</p>
+                        <div class="space-y-3">${opts}</div>
                     </div>
                 `;
             });
 
             div.innerHTML += `
-                <button onclick="submitQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition mt-4">
-                    ส่งคำตอบและดูคะแนน
+                <button onclick="submitQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-[0.99] mt-4 flex items-center justify-center gap-2 text-lg">
+                    <i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ
                 </button>
             `;
         }
@@ -731,11 +804,12 @@
         async function submitQuiz() {
             const result = await Swal.fire({
                 title: 'ยืนยันการส่งคำตอบ?',
-                text: "ตรวจสอบความถูกต้องก่อนส่ง",
+                text: "เมื่อส่งแล้วจะไม่สามารถแก้ไขได้",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#4f46e5',
-                confirmButtonText: 'ส่งคำตอบ'
+                confirmButtonText: 'ส่งเลย',
+                cancelButtonText: 'ตรวจสอบก่อน'
             });
 
             if (!result.isConfirmed) return;
@@ -748,7 +822,7 @@
             });
 
             const total = currentLesson.quiz_data.length;
-            const passed = (score / total) >= 0.5; // Pass at 50%
+            const passed = (score / total) >= 0.5;
 
             // Save Result
             await dbClient.from('quiz_results').insert([{
@@ -762,58 +836,22 @@
             showLoading(false);
             
             Swal.fire({
-                title: passed ? 'ยอดเยี่ยม! ผ่านเกณฑ์' : 'พยายามอีกนิดนะ',
-                html: `<div class="text-4xl font-bold ${passed ? 'text-green-600':'text-red-500'} mb-2">${score} / ${total}</div>คะแนน`,
-                icon: passed ? 'success' : 'warning',
-                confirmButtonText: 'ตกลง'
+                title: passed ? 'ยินดีด้วย! ผ่านเกณฑ์' : 'พยายามอีกครั้งนะ',
+                html: `
+                    <div class="flex justify-center my-4">
+                        <div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold ${passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">
+                            ${score}/${total}
+                        </div>
+                    </div>
+                    <p class="text-slate-500">บันทึกคะแนนเรียบร้อยแล้ว</p>
+                `,
+                confirmButtonText: 'กลับหน้าบทเรียน'
             }).then(() => {
                 backToDash();
             });
         }
 
-        // ================= PROFILE & REPORT =================
-        async function openProfile() {
-            showLoading(true);
-            
-            // Calc Time
-            let totalTime = 0;
-            if (currentUser.study_time) Object.values(currentUser.study_time).forEach(t => totalTime += t);
-            document.getElementById('profileTotalTime').innerText = Math.floor(totalTime / 60);
-
-            // Fetch History
-            const { data: res } = await dbClient.from('quiz_results')
-                .select('*, lessons(title, category)')
-                .eq('student_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            
-            const tb = document.getElementById('profileQuizTable');
-            tb.innerHTML = '';
-            
-            if (res && res.length > 0) {
-                res.forEach(r => {
-                    const title = r.lessons ? r.lessons.title : 'บทเรียนที่ถูกลบ';
-                    const badge = r.passed 
-                        ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">ผ่าน</span>' 
-                        : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">ไม่ผ่าน</span>';
-                    
-                    tb.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b border-slate-50">
-                            <td class="p-2 text-slate-500">${new Date(r.created_at).toLocaleDateString('th-TH')}</td>
-                            <td class="p-2 font-medium text-slate-700">${title}</td>
-                            <td class="p-2 text-center font-bold">${r.score}/${r.total_score}</td>
-                            <td class="p-2 text-center">${badge}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">ยังไม่มีประวัติการสอบ</td></tr>';
-            }
-
-            showLoading(false);
-            document.getElementById('profileModal').classList.remove('hidden');
-        }
-
-        // ================= ADMIN LOGIC =================
+        // --- 8. ADMIN & MONITORING ---
         function switchAdminTab(tab) {
             document.getElementById('admin-monitor-view').classList.toggle('hidden', tab !== 'monitor');
             document.getElementById('admin-content-view').classList.toggle('hidden', tab !== 'content');
@@ -826,7 +864,7 @@
                 tabMon.classList.remove('border-transparent', 'text-slate-500');
                 tabCon.classList.remove('border-indigo-600', 'text-indigo-600');
                 tabCon.classList.add('border-transparent', 'text-slate-500');
-                fetchStudentMonitor(); // Refresh
+                fetchStudentMonitor(); 
             } else {
                 tabCon.classList.add('border-indigo-600', 'text-indigo-600');
                 tabCon.classList.remove('border-transparent', 'text-slate-500');
@@ -838,71 +876,68 @@
         async function fetchStudentMonitor() {
             showLoading(true);
             try {
-                // Fetch Students
+                // Fetch All Students
                 let { data: students } = await dbClient.from('student_progress').select('*');
                 
-                // Fetch all quiz results for scoring calculation
+                // Fetch All Scores
                 const { data: results } = await dbClient.from('quiz_results').select('student_id, score');
 
-                // Pre-process data (calculate total score for sorting)
+                // Compute Totals
                 students = students.map(s => {
-                    // Sum score
-                    const myScores = results.filter(r => r.student_id === s.id);
+                    const myScores = results ? results.filter(r => r.student_id === s.id) : [];
                     const totalScore = myScores.reduce((acc, curr) => acc + curr.score, 0);
                     
-                    // Calc Total Time
                     let totalTime = 0;
                     if(s.study_time) Object.values(s.study_time).forEach(v => totalTime += v);
 
                     return { ...s, totalScore, totalTime };
                 });
 
-                // --- SORTING LOGIC ---
+                // Sorting Logic
                 const sortType = document.getElementById('sortStudentSelect').value;
-                
                 students.sort((a, b) => {
-                    if (sortType === 'recent') {
-                        return new Date(b.last_login || 0) - new Date(a.last_login || 0);
-                    } else if (sortType === 'score_desc') {
-                        return b.totalScore - a.totalScore;
-                    } else if (sortType === 'score_asc') {
-                        return a.totalScore - b.totalScore;
-                    } else if (sortType === 'number_asc') {
-                        return parseInt(a.student_number || 0) - parseInt(b.student_number || 0);
-                    } else if (sortType === 'number_desc') {
-                        return parseInt(b.student_number || 0) - parseInt(a.student_number || 0);
-                    }
+                    if (sortType === 'recent') return new Date(b.last_login || 0) - new Date(a.last_login || 0);
+                    if (sortType === 'score_desc') return b.totalScore - a.totalScore;
+                    if (sortType === 'score_asc') return a.totalScore - b.totalScore;
+                    if (sortType === 'number_asc') return (parseInt(a.student_number) || 0) - (parseInt(b.student_number) || 0);
+                    if (sortType === 'number_desc') return (parseInt(b.student_number) || 0) - (parseInt(a.student_number) || 0);
                     return 0;
                 });
 
-                // Store for Detail View
-                monitorDataCache = students;
-
-                // Render
+                monitorDataCache = students; // Cache for detail view
                 const tb = document.getElementById('monitorTableBody');
                 tb.innerHTML = '';
                 
-                if(students.length === 0) {
-                    tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">ไม่พบข้อมูลนักเรียน</td></tr>';
+                if(!students.length) {
+                    tb.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400">ยังไม่มีนักเรียนในระบบ</td></tr>';
                 }
 
                 students.forEach((s, idx) => {
                     const progressCount = s.completed_lessons ? s.completed_lessons.length : 0;
-                    const lastActive = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH') : '-';
+                    const lastActive = s.last_login ? new Date(s.last_login).toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' }) : '-';
 
                     tb.innerHTML += `
                         <tr class="hover:bg-slate-50 transition border-b border-slate-50">
-                            <td class="p-4 font-mono text-indigo-600 font-bold">${s.student_number} <span class="text-xs text-slate-400 ml-1">(${s.student_class})</span></td>
+                            <td class="p-4">
+                                <div class="font-bold text-slate-800">${s.student_class}</div>
+                                <div class="text-xs text-slate-400 font-mono">#${s.student_number}</div>
+                            </td>
                             <td class="p-4 font-medium text-slate-700">
                                 ${s.student_name}
-                                <div class="text-xs text-slate-400">ใช้งานล่าสุด: ${lastActive}</div>
+                                <div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ${lastActive}</div>
                             </td>
-                            <td class="p-4 text-center"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">${progressCount} บท</span></td>
-                            <td class="p-4 text-center text-slate-600">${Math.floor(s.totalTime/60)} นาที</td>
-                            <td class="p-4 text-center font-bold text-green-600">${s.totalScore}</td>
                             <td class="p-4 text-center">
-                                <button onclick="viewStudentDetail(${idx})" class="bg-white border border-slate-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
-                                    ดูรายละเอียด
+                                <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-bold">${progressCount} บท</span>
+                            </td>
+                            <td class="p-4 text-center text-slate-600 font-mono text-xs">
+                                ${Math.floor(s.totalTime/60)} นาที
+                            </td>
+                            <td class="p-4 text-center">
+                                <span class="font-bold text-green-600">${s.totalScore}</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                <button onclick="viewStudentDetail(${idx})" class="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
+                                    <i class="fa-solid fa-eye"></i> รายละเอียด
                                 </button>
                             </td>
                         </tr>
@@ -918,10 +953,17 @@
             showLoading(true);
 
             document.getElementById('admDetailHeader').innerHTML = `
-                <h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2>
-                <div class="flex gap-4 mt-2 text-sm text-slate-500">
-                    <span><i class="fa-solid fa-layer-group"></i> ชั้น ${s.student_class}</span>
-                    <span><i class="fa-solid fa-arrow-down-1-9"></i> เลขที่ ${s.student_number}</span>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">
+                        ${s.student_name.charAt(0)}
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2>
+                        <div class="flex gap-4 mt-1 text-xs font-bold text-slate-500 uppercase tracking-wide">
+                            <span><i class="fa-solid fa-layer-group"></i> ${s.student_class}</span>
+                            <span><i class="fa-solid fa-hashtag"></i> เลขที่ ${s.student_number}</span>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -939,19 +981,19 @@
 
                 let scoreDisplay = '<span class="text-slate-300">-</span>';
                 if (targetLesson && qResults) {
-                    const match = qResults.find(r => r.lesson_id == targetLesson.id); // Find latest because sorted desc
+                    const match = qResults.find(r => r.lesson_id == targetLesson.id);
                     if (match) {
-                        const color = match.passed ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
-                        scoreDisplay = `<span class="${color} px-2 py-1 rounded font-bold text-xs">${match.score}/${match.total_score}</span>`;
+                        const color = match.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                        scoreDisplay = `<span class="${color} px-2 py-0.5 rounded text-xs font-bold">${match.score}/${match.total_score}</span>`;
                     }
                 }
 
                 tb.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 text-slate-700 font-medium">${u.title}</td>
-                        <td class="p-3 text-center">${isFin ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>'}</td>
-                        <td class="p-3 text-center text-slate-600">${time}</td>
-                        <td class="p-3 text-center">${scoreDisplay}</td>
+                    <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                        <td class="p-4 text-slate-700 font-medium text-sm">${u.title}</td>
+                        <td class="p-4 text-center">${isFin ? '<i class="fa-solid fa-circle-check text-green-500 text-lg"></i>' : '<i class="fa-regular fa-circle text-slate-300 text-lg"></i>'}</td>
+                        <td class="p-4 text-center text-slate-600 text-xs font-mono">${time}</td>
+                        <td class="p-4 text-center">${scoreDisplay}</td>
                     </tr>
                 `;
             });
@@ -960,7 +1002,7 @@
             document.getElementById('adminDetailModal').classList.remove('hidden');
         }
 
-        // ================= CONTENT EDITOR LOGIC =================
+        // --- 9. CONTENT EDITOR LOGIC ---
         async function fetchLessonsForAdmin() {
             const { data } = await dbClient.from('lessons').select('*').order('category');
             allLessonsCache = data || [];
@@ -969,9 +1011,10 @@
             
             allLessonsCache.forEach(l => {
                 div.innerHTML += `
-                    <div onclick="loadEditor(${l.id})" class="p-3 rounded-lg border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer transition group">
-                        <div class="text-xs font-bold text-indigo-500 mb-1">${l.category}</div>
-                        <div class="text-sm font-medium text-slate-700 group-hover:text-indigo-700 truncate">${l.title}</div>
+                    <div onclick="loadEditor(${l.id})" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-indigo-300 hover:shadow-md cursor-pointer transition group relative">
+                        <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">${l.category}</div>
+                        <div class="text-sm font-bold text-slate-700 group-hover:text-indigo-700 truncate pr-6">${l.title}</div>
+                        <div class="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400"><i class="fa-solid fa-pen"></i></div>
                     </div>
                 `;
             });
@@ -983,6 +1026,8 @@
             document.getElementById('editContent').value = '';
             editingQuizData = [];
             renderQuizList();
+            // Scroll to editor
+            if(window.innerWidth < 1024) document.getElementById('admin-content-view').scrollIntoView({behavior:'smooth'});
         }
 
         function loadEditor(id) {
@@ -1000,18 +1045,18 @@
             const div = document.getElementById('qList');
             div.innerHTML = '';
             if (editingQuizData.length === 0) {
-                div.innerHTML = '<div class="text-center text-slate-400 text-sm py-4">ไม่มีข้อมูลข้อสอบ</div>';
+                div.innerHTML = '<div class="text-center text-slate-400 text-xs py-4 border border-dashed rounded-lg">ยังไม่มีข้อสอบ</div>';
                 return;
             }
 
             editingQuizData.forEach((q, i) => {
                 div.innerHTML += `
-                    <div class="bg-white border border-slate-200 p-3 rounded-lg text-sm relative group hover:border-indigo-300 transition">
-                        <div class="font-bold text-slate-700 pr-16 truncate">${i+1}. ${q.question}</div>
-                        <div class="text-xs text-slate-500 mt-1">เฉลย: ${q.options[q.correct]}</div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <button onclick="editQ(${i})" class="text-blue-500 hover:bg-blue-50 p-1 rounded"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="delQ(${i})" class="text-red-500 hover:bg-red-50 p-1 rounded"><i class="fa-solid fa-trash"></i></button>
+                    <div class="bg-white border border-slate-200 p-3 rounded-lg text-sm relative group hover:border-indigo-300 transition shadow-sm">
+                        <div class="font-bold text-slate-700 pr-16 truncate text-xs"><span class="text-indigo-500 mr-1">Q${i+1}.</span> ${q.question}</div>
+                        <div class="text-[10px] text-slate-500 mt-1 bg-slate-100 inline-block px-1.5 rounded">เฉลยข้อ: ${parseInt(q.correct)+1}</div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex gap-1">
+                            <button onclick="editQ(${i})" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="delQ(${i})" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -1052,7 +1097,7 @@
                 text: "ข้อมูลนี้ไม่สามารถกู้คืนได้",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
+                confirmButtonColor: '#ef4444',
                 confirmButtonText: 'ลบเลย'
             });
 
@@ -1066,23 +1111,24 @@
             }
         }
 
-        // --- Question Modal Logic ---
+        // --- Question Modal Helpers ---
         function openQuestionModal() {
             editingQuestionIndex = -1;
             document.getElementById('qInputText').value = '';
             document.getElementById('optionInputsContainer').innerHTML = '';
-            addOptionInput(); addOptionInput(); addOptionInput(); addOptionInput(); // Default 4
+            // Default 4 options
+            for(let i=0; i<4; i++) addOptionInput();
             document.getElementById('questionModal').classList.remove('hidden');
         }
 
         function addOptionInput(val = '', isCorrect = false) {
             const container = document.getElementById('optionInputsContainer');
             const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-2 bg-slate-50 p-2 rounded border border-slate-200';
+            div.className = 'flex items-center gap-2 mb-2 bg-slate-50 p-2 rounded-lg border border-slate-200 focus-within:border-indigo-400 transition';
             div.innerHTML = `
-                <input type="radio" name="corr_opt" class="w-4 h-4 cursor-pointer" ${isCorrect ? 'checked' : ''}>
-                <input type="text" class="opt-val w-full bg-transparent outline-none text-sm" value="${val}" placeholder="ตัวเลือก...">
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                <input type="radio" name="corr_opt" class="w-4 h-4 cursor-pointer text-indigo-600 focus:ring-indigo-500" ${isCorrect ? 'checked' : ''}>
+                <input type="text" class="opt-val w-full bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400" value="${val}" placeholder="ตัวเลือก...">
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition"><i class="fa-solid fa-xmark"></i></button>
             `;
             container.appendChild(div);
         }
@@ -1103,7 +1149,7 @@
 
             if (!q) return Swal.fire('เตือน', 'กรุณาใส่โจทย์คำถาม', 'warning');
             if (opts.length < 2) return Swal.fire('เตือน', 'ต้องมีตัวเลือกอย่างน้อย 2 ข้อ', 'warning');
-            if (corr === -1) return Swal.fire('เตือน', 'กรุณาเลือกข้อที่ถูกต้อง (ติ๊กวงกลม)', 'warning');
+            if (corr === -1) return Swal.fire('เตือน', 'กรุณาติ๊กวงกลมหน้าข้อที่ถูกต้อง', 'warning');
 
             const obj = { question: q, options: opts, correct: corr };
 
@@ -1129,6 +1175,50 @@
             renderQuizList();
         }
 
+        async function openProfile() {
+            if(!currentUser) return;
+            showLoading(true);
+            
+            // Calculate Time
+            let totalTime = 0;
+            if (currentUser.study_time) Object.values(currentUser.study_time).forEach(t => totalTime += t);
+            document.getElementById('profileTotalTime').innerText = Math.floor(totalTime / 60);
+            
+            // Calculate Completed
+            document.getElementById('profileCompletedCount').innerText = currentUser.completed_lessons ? currentUser.completed_lessons.length : 0;
+
+            // Fetch Quiz History
+            const { data: res } = await dbClient.from('quiz_results')
+                .select('*, lessons(title, category)')
+                .eq('student_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            
+            const tb = document.getElementById('profileQuizTable');
+            tb.innerHTML = '';
+            
+            if (res && res.length > 0) {
+                res.forEach(r => {
+                    const title = r.lessons ? r.lessons.title : 'บทเรียนที่ถูกลบ';
+                    const badge = r.passed 
+                        ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">PASS</span>' 
+                        : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">FAIL</span>';
+                    
+                    tb.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                            <td class="p-3 text-slate-500 text-xs">${new Date(r.created_at).toLocaleDateString('th-TH')}</td>
+                            <td class="p-3 font-medium text-slate-700 text-xs">${title}</td>
+                            <td class="p-3 text-center font-bold text-slate-800 text-sm">${r.score}/${r.total_score}</td>
+                            <td class="p-3 text-center">${badge}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tb.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 text-sm">ยังไม่มีประวัติการสอบ</td></tr>';
+            }
+
+            showLoading(false);
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
