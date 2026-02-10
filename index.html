@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js Added -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -93,14 +94,27 @@
             border-radius: 3px 3px 0 0;
         }
 
-        /* Device Preview Frame */
-        .preview-frame {
-            border: 8px solid #333;
-            border-radius: 20px;
-            background: #fff;
-            transition: width 0.3s ease;
-            margin: 0 auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        /* Responsive Video for Content */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        /* Dashboard Specific */
+        .stat-card {
+            @apply glass-card p-6 flex flex-col justify-between h-32 relative overflow-hidden;
+        }
+        .stat-icon {
+            @apply absolute right-2 top-2 opacity-10 text-6xl;
         }
     </style>
 </head>
@@ -256,7 +270,7 @@
             </div>
         </section>
 
-        <!-- 3. Admin Dashboard -->
+        <!-- 3. Admin Dashboard (Updated with Charts) -->
         <section id="adminDashboard" class="hidden fade-in">
             <div class="bg-slate-800 text-white p-6 rounded-2xl shadow-lg mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
@@ -280,7 +294,7 @@
 
             <div class="flex gap-2 mb-6 border-b border-slate-200 overflow-x-auto pb-1">
                 <button onclick="switchAdminTab('dashboard')" id="adm-tab-dashboard" class="px-6 py-3 font-bold text-indigo-600 border-b-2 border-indigo-600 whitespace-nowrap transition">
-                    <i class="fa-solid fa-gauge-high mr-2"></i> ภาพรวม
+                    <i class="fa-solid fa-gauge-high mr-2"></i> ภาพรวม (Dashboard)
                 </button>
                 <button onclick="switchAdminTab('monitor')" id="adm-tab-monitor" class="px-6 py-3 font-bold text-slate-500 hover:text-indigo-600 border-b-2 border-transparent whitespace-nowrap transition">
                     <i class="fa-solid fa-chart-bar mr-2"></i> ติดตามผู้เรียน
@@ -290,38 +304,68 @@
                 </button>
             </div>
 
-            <!-- Tab: Dashboard Overview -->
-            <div id="admin-dashboard-view" class="fade-in">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Stat Card 1 -->
-                    <div class="glass-card p-6 flex items-center gap-4 border-l-4 border-indigo-500">
-                        <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div>
-                            <p class="text-slate-500 text-sm font-bold uppercase">นักเรียนทั้งหมด</p>
-                            <h3 class="text-3xl font-bold text-slate-800" id="stat-total-students">-</h3>
+            <!-- Tab: Dashboard Overview (NEW) -->
+            <div id="admin-dashboard-view" class="fade-in space-y-6">
+                <!-- Metrics Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="stat-card border-l-4 border-indigo-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">นักเรียนทั้งหมด</p>
+                        <h3 class="text-4xl font-bold text-slate-800 mt-2" id="stat-total-students">-</h3>
+                        <i class="fa-solid fa-users stat-icon text-indigo-500"></i>
+                    </div>
+                    <div class="stat-card border-l-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">เข้าใช้งานวันนี้</p>
+                        <h3 class="text-4xl font-bold text-slate-800 mt-2" id="stat-active-today">-</h3>
+                        <i class="fa-solid fa-clock-rotate-left stat-icon text-green-500"></i>
+                    </div>
+                    <div class="stat-card border-l-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">คะแนนสอบเฉลี่ย</p>
+                        <h3 class="text-4xl font-bold text-slate-800 mt-2" id="stat-avg-score">-</h3>
+                        <i class="fa-solid fa-star-half-stroke stat-icon text-orange-500"></i>
+                    </div>
+                    <div class="stat-card border-l-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">เรียนจบแล้ว</p>
+                        <h3 class="text-4xl font-bold text-slate-800 mt-2" id="stat-completion">-</h3>
+                        <i class="fa-solid fa-graduation-cap stat-icon text-blue-500"></i>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart 1 -->
+                    <div class="glass-card p-6 lg:col-span-2">
+                        <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-column text-indigo-500"></i> คะแนนเฉลี่ยรายห้อง</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="chartScoreByClass"></canvas>
                         </div>
                     </div>
-                    <!-- Stat Card 2 -->
-                    <div class="glass-card p-6 flex items-center gap-4 border-l-4 border-green-500">
-                        <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
+                    <!-- Chart 2 -->
+                    <div class="glass-card p-6">
+                        <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-pink-500"></i> สัดส่วนความก้าวหน้า</h4>
+                        <div class="relative h-48 w-full flex justify-center">
+                            <canvas id="chartProgress"></canvas>
                         </div>
-                        <div>
-                            <p class="text-slate-500 text-sm font-bold uppercase">เข้าใช้งานวันนี้</p>
-                            <h3 class="text-3xl font-bold text-slate-800" id="stat-active-today">-</h3>
+                        <div class="mt-4 text-center text-xs text-slate-500">
+                            แสดงจำนวนนักเรียนตามจำนวนบทที่เรียนจบ
                         </div>
                     </div>
-                    <!-- Stat Card 3 -->
-                    <div class="glass-card p-6 flex items-center gap-4 border-l-4 border-orange-500">
-                        <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-2xl">
-                            <i class="fa-solid fa-book"></i>
-                        </div>
-                        <div>
-                            <p class="text-slate-500 text-sm font-bold uppercase">บทเรียนทั้งหมด</p>
-                            <h3 class="text-3xl font-bold text-slate-800" id="stat-total-lessons">-</h3>
-                        </div>
+                </div>
+
+                <!-- Top Students Table -->
+                <div class="glass-card p-6">
+                    <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-trophy text-yellow-500"></i> 5 อันดับคะแนนสูงสุด</h4>
+                    <div class="overflow-x-auto rounded-lg border border-slate-100">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">อันดับ</th>
+                                    <th class="p-3">ชื่อ-นามสกุล</th>
+                                    <th class="p-3">ชั้น</th>
+                                    <th class="p-3 text-center">คะแนนรวม</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topStudentsTable" class="divide-y divide-slate-50"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -399,8 +443,10 @@
                     </div>
 
                     <div class="mb-6">
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">เนื้อหาบทเรียน (HTML)</label>
-                        <p class="text-[10px] text-slate-400 mb-1 ml-1">*รองรับ Text, Image URL, YouTube Embed Code</p>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase ml-1">เนื้อหาบทเรียน (HTML)</label>
+                            <button onclick="previewLessonContent()" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-md hover:bg-indigo-100 transition font-bold flex items-center gap-1"><i class="fa-solid fa-eye"></i> ดูตัวอย่าง</button>
+                        </div>
                         <textarea id="editContent" class="w-full px-4 py-3 border border-slate-200 rounded-lg h-48 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 focus:bg-white transition leading-relaxed" placeholder="<p>ใส่เนื้อหาที่นี่...</p>"></textarea>
                     </div>
 
@@ -424,12 +470,25 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="mt-auto py-6 text-center text-slate-400 text-sm">
-        <p>&copy; 2024 KRU DREAM E-Learning System. All rights reserved.</p>
-    </footer>
+    <footer class="mt-auto py-6 text-center text-slate-400 text-sm"><p>&copy; 2024 KRU DREAM E-Learning System. All rights reserved.</p></footer>
 
-    <!-- ================= MODALS ================= -->
+    <!-- Modals -->
+    
+    <!-- Lesson Preview Modal -->
+    <div id="lessonPreviewModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[95] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="bg-indigo-600 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-eye mr-2"></i> ตัวอย่างเนื้อหา (Preview)</h3>
+                <button onclick="closeModal('lessonPreviewModal')" class="hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto bg-slate-50 flex-grow">
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+                    <h1 id="previewLessonTitle" class="text-2xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-100"></h1>
+                    <div id="previewLessonBody" class="prose max-w-none text-slate-700 leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Device Preview Modal -->
     <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[90] flex flex-col overflow-hidden">
@@ -534,23 +593,12 @@
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6">
             <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-link text-orange-500"></i> เชื่อมโยงบัญชี (Merge)</h3>
             <p class="text-sm text-slate-500 mb-6">โอนข้อมูลผลการเรียนจากบัญชีที่ซ้ำซ้อนมารวมกับบัญชีหลัก แล้วลบบัญชีเก่าทิ้ง</p>
-            
             <div class="space-y-6">
-                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
-                    <label class="block text-xs font-bold text-red-600 uppercase mb-2">1. บัญชีต้นทาง (จะถูกลบ)</label>
-                    <select id="mergeSource" class="w-full p-3 border rounded-lg outline-none text-sm"></select>
-                </div>
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100"><label class="block text-xs font-bold text-red-600 uppercase mb-2">1. บัญชีต้นทาง (จะถูกลบ)</label><select id="mergeSource" class="w-full p-3 border rounded-lg outline-none text-sm"></select></div>
                 <div class="flex justify-center -my-3 relative z-10"><div class="bg-white p-2 rounded-full border shadow-sm"><i class="fa-solid fa-arrow-down text-slate-400"></i></div></div>
-                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                    <label class="block text-xs font-bold text-green-600 uppercase mb-2">2. บัญชีปลายทาง (เก็บไว้)</label>
-                    <select id="mergeTarget" class="w-full p-3 border rounded-lg outline-none text-sm"></select>
-                </div>
+                <div class="bg-green-50 p-4 rounded-xl border border-green-100"><label class="block text-xs font-bold text-green-600 uppercase mb-2">2. บัญชีปลายทาง (เก็บไว้)</label><select id="mergeTarget" class="w-full p-3 border rounded-lg outline-none text-sm"></select></div>
             </div>
-
-            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100">
-                <button onclick="closeModal('mergeModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button>
-                <button onclick="executeMerge()" class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold shadow-md transition">ยืนยันการเชื่อมโยง</button>
-            </div>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-100"><button onclick="closeModal('mergeModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button><button onclick="executeMerge()" class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-bold shadow-md transition">ยืนยันการเชื่อมโยง</button></div>
         </div>
     </div>
 
@@ -563,6 +611,8 @@
         };
 
         let dbClient, currentUser, currentLesson, studyTimer, secondsSpent = 0, editingQuizData = [], allLessonsCache = [], editingQuestionIndex = -1, monitorDataCache = []; 
+        let chartInstances = {}; // Store Chart instances
+
         try { dbClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey); } catch (e) { Swal.fire('Error', 'DB Error', 'error'); }
 
         window.onload = function() { initTopicGrid(); initAdminSelect(); };
@@ -618,7 +668,7 @@
                 showSection('adminDashboard');
                 fetchLessonsForAdmin();
                 fetchStudentMonitor();
-                fetchDashboardStats(); // Fetch Dashboard
+                fetchDashboardStats(); 
                 document.getElementById('teacherPassword').value = '';
             } else {
                 Swal.fire('รหัสผ่านผิด', 'กรุณาลองใหม่อีกครั้ง', 'error');
@@ -655,10 +705,46 @@
         async function loadLessonGroup(catId) {
             Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
             try {
-                const { data } = await dbClient.from('lessons').select('*').eq('category', catId).maybeSingle();
-                Swal.close();
-                if (!data) return Swal.fire('ขออภัย', 'ยังไม่มีเนื้อหา (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
+                // Try to fetch from DB
+                let { data } = await dbClient.from('lessons').select('*').eq('category', catId).maybeSingle();
+                
+                // --- MOCK DATA FALLBACK (สำหรับดูตัวอย่างหากไม่มีข้อมูลใน DB) ---
+                if (!data) {
+                    data = {
+                        id: -1, // Fake ID
+                        title: 'ตัวอย่าง: บทที่ 1 บทนำ (Demo)',
+                        content: `
+                            <div class="space-y-6">
+                                <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-500">
+                                    <h3 class="text-xl font-bold text-blue-700">1.1 ความเป็นมาและความสำคัญ</h3>
+                                    <p class="text-slate-600 mt-2">ส่วนนี้เป็นการอธิบายเหตุผลที่ผู้จัดทำสนใจทำโครงงานนี้ ปัญหาที่พบคืออะไร และโครงงานนี้จะช่วยแก้ปัญหาได้อย่างไร...</p>
+                                </div>
+                                <div class="video-container">
+                                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                </div>
+                                <p class="text-slate-700 leading-relaxed">การเขียนรายงานโครงงานคอมพิวเตอร์ เป็นขั้นตอนสำคัญในการเผยแพร่ผลงาน...</p>
+                                <div class="my-4">
+                                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" class="w-full h-64 object-cover rounded-xl shadow-md" alt="Coding">
+                                    <p class="text-center text-xs text-slate-400 mt-2">ภาพประกอบ: การเขียนโปรแกรม</p>
+                                </div>
+                                <h4 class="text-lg font-bold text-slate-800">วัตถุประสงค์ของโครงงาน</h4>
+                                <ul class="list-disc list-inside space-y-2 text-slate-700 ml-4">
+                                    <li>เพื่อศึกษาการพัฒนาเว็บไซต์เพื่อการศึกษา</li>
+                                    <li>เพื่อนำความรู้เรื่อง HTML/CSS/JS มาประยุกต์ใช้</li>
+                                </ul>
+                            </div>
+                        `,
+                        quiz_data: [
+                            { question: 'ส่วนใดของรายงานที่บอกถึง "เหตุผล" ในการทำโครงงาน?', options: ['บทคัดย่อ', 'กิตติกรรมประกาศ', 'ที่มาและความสำคัญ', 'ภาคผนวก'], correct: 2 },
+                            { question: 'บทที่ 1 ของรายงานโครงงานคอมพิวเตอร์คืออะไร?', options: ['บทนำ', 'เอกสารที่เกี่ยวข้อง', 'วิธีดำเนินงาน', 'ผลการดำเนินงาน'], correct: 0 }
+                        ]
+                    };
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+                    Toast.fire({ icon: 'info', title: 'แสดงข้อมูลตัวอย่าง (Demo Mode)' });
+                }
+
                 currentLesson = data;
+                Swal.close();
                 document.getElementById('mainMenu').classList.add('hidden'); document.getElementById('contentArea').classList.remove('hidden');
                 document.getElementById('lessonTitle').innerHTML = currentLesson.title;
                 switchContentTab('learn');
@@ -696,7 +782,7 @@
         async function stopLessonTimer() {
             if (studyTimer) {
                 clearInterval(studyTimer); document.getElementById('timerDisplay').classList.add('hidden');
-                if (currentUser && currentLesson && currentUser.study_time) {
+                if (currentUser && currentLesson && currentLesson.id > 0 && currentUser.study_time) {
                     const oldTime = currentUser.study_time[currentLesson.category] || 0;
                     currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
                     // Improved Error Handling
@@ -726,6 +812,11 @@
             if (!res.isConfirmed) return;
             let score = 0; currentLesson.quiz_data.forEach((q, i) => { const s = document.querySelector(`input[name="q_${i}"]:checked`); if (s && parseInt(s.value) === parseInt(q.correct)) score++; });
             const total = currentLesson.quiz_data.length; const passed = (score/total) >= 0.5;
+            
+            if(currentLesson.id === -1) {
+                return Swal.fire({ title: passed?'ผ่านเกณฑ์ (Demo)':'ไม่ผ่านเกณฑ์ (Demo)', html: `<h1 class="text-4xl font-bold ${passed?'text-green-600':'text-red-500'}">${score}/${total}</h1><p class="text-sm text-slate-500 mt-2">นี่คือโหมดตัวอย่าง คะแนนจะไม่ถูกบันทึก</p>`, confirmButtonText: 'ตกลง' });
+            }
+
             try {
                 await dbClient.from('quiz_results').insert([{ student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: total, passed: passed }]);
                 Swal.fire({ title: passed?'ผ่านเกณฑ์':'ไม่ผ่านเกณฑ์', html: `<h1 class="text-4xl font-bold ${passed?'text-green-600':'text-red-500'}">${score}/${total}</h1>`, confirmButtonText: 'ตกลง' }).then(() => backToDash());
@@ -751,16 +842,103 @@
         }
 
         async function fetchDashboardStats() {
-            const { count: studentCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true });
-            const { count: lessonCount } = await dbClient.from('lessons').select('*', { count: 'exact', head: true });
-            
-            // Count active today
-            const today = new Date(); today.setHours(0,0,0,0);
-            const { count: activeCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true }).gte('last_login', today.toISOString());
+            try {
+                // Fetch basic counts
+                const { count: studentCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true });
+                const { count: lessonCount } = await dbClient.from('lessons').select('*', { count: 'exact', head: true });
+                const today = new Date(); today.setHours(0,0,0,0);
+                const { count: activeCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true }).gte('last_login', today.toISOString());
+                
+                // Fetch Detailed Data for Charts
+                const { data: allScores } = await dbClient.from('quiz_results').select('score, total_score, student_id');
+                const { data: allStudents } = await dbClient.from('student_progress').select('id, student_name, student_class, completed_lessons');
 
-            document.getElementById('stat-total-students').innerText = studentCount || 0;
-            document.getElementById('stat-total-lessons').innerText = lessonCount || 0;
-            document.getElementById('stat-active-today').innerText = activeCount || 0;
+                // Calc Avg Score
+                let totalScoreSum = 0; let totalMaxScore = 0;
+                if(allScores) allScores.forEach(s => { totalScoreSum += s.score; totalMaxScore += s.total_score; });
+                const avgScore = totalMaxScore > 0 ? ((totalScoreSum / totalMaxScore) * 100).toFixed(1) + '%' : '0%';
+                
+                // Calc Completion
+                let totalCompleted = 0;
+                if(allStudents) allStudents.forEach(s => totalCompleted += (s.completed_lessons ? s.completed_lessons.length : 0));
+                
+                // Top Students Logic
+                let studentScores = {};
+                if(allStudents) allStudents.forEach(s => studentScores[s.id] = { ...s, total: 0 });
+                if(allScores) allScores.forEach(s => { if(studentScores[s.student_id]) studentScores[s.student_id].total += s.score; });
+                const top5 = Object.values(studentScores).sort((a,b) => b.total - a.total).slice(0, 5);
+
+                // Render Stats
+                document.getElementById('stat-total-students').innerText = studentCount || 0;
+                document.getElementById('stat-total-lessons').innerText = lessonCount || 0;
+                document.getElementById('stat-active-today').innerText = activeCount || 0;
+                document.getElementById('stat-avg-score').innerText = avgScore;
+                document.getElementById('stat-completion').innerText = totalCompleted + ' บท';
+
+                // Render Table
+                const topTable = document.getElementById('topStudentsTable'); topTable.innerHTML = '';
+                top5.forEach((s, i) => {
+                    topTable.innerHTML += `
+                        <tr class="border-b last:border-0 hover:bg-slate-50">
+                            <td class="p-3 font-bold text-indigo-600">#${i+1}</td>
+                            <td class="p-3 text-slate-700">${s.student_name}</td>
+                            <td class="p-3 text-slate-500 text-xs">${s.student_class}</td>
+                            <td class="p-3 text-center font-bold text-green-600">${s.total}</td>
+                        </tr>
+                    `;
+                });
+
+                // Chart 1: Score by Class
+                const classScores = {};
+                if(allStudents) {
+                    allStudents.forEach(s => {
+                        if(!classScores[s.student_class]) classScores[s.student_class] = { sum: 0, count: 0 };
+                        classScores[s.student_class].sum += studentScores[s.id].total;
+                        classScores[s.student_class].count++;
+                    });
+                }
+                const chartLabels1 = Object.keys(classScores).sort();
+                const chartData1 = chartLabels1.map(c => (classScores[c].sum / classScores[c].count).toFixed(1));
+                
+                renderChart('chartScoreByClass', 'bar', chartLabels1, chartData1, 'คะแนนเฉลี่ย', '#6366f1');
+
+                // Chart 2: Completion Progress
+                const progressBuckets = { 'ยังไม่เริ่ม': 0, '1-2 บท': 0, '3-4 บท': 0, 'ครบ 5 บท': 0 };
+                if(allStudents) {
+                    allStudents.forEach(s => {
+                        const c = s.completed_lessons ? s.completed_lessons.length : 0;
+                        if(c === 0) progressBuckets['ยังไม่เริ่ม']++;
+                        else if(c <= 2) progressBuckets['1-2 บท']++;
+                        else if(c <= 4) progressBuckets['3-4 บท']++;
+                        else progressBuckets['ครบ 5 บท']++;
+                    });
+                }
+                renderChart('chartProgress', 'doughnut', Object.keys(progressBuckets), Object.values(progressBuckets), 'จำนวนคน', ['#94a3b8', '#fbbf24', '#3b82f6', '#22c55e']);
+
+            } catch(e) { console.error(e); }
+        }
+
+        function renderChart(id, type, labels, data, label, color) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if(chartInstances[id]) chartInstances[id].destroy(); // Destroy old chart
+            
+            chartInstances[id] = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: color,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: type === 'bar' ? { y: { beginAtZero: true } } : {}
+                }
+            });
         }
 
         async function fetchStudentMonitor() {
@@ -789,7 +967,7 @@
                     const active = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'}) : '-';
                     tb.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 group">
-                            <td class="p-4 font-bold text-slate-800">${s.student_class||'-'}</td>
+                            <td class="p-4"><div class="font-bold text-slate-800">${s.student_class||'-'}</div></td>
                             <td class="p-4 text-center">${s.student_number}</td>
                             <td class="p-4 font-mono text-indigo-600 font-bold">${s.student_code||'-'}</td>
                             <td class="p-4 font-medium text-slate-700">${s.student_name}<div class="text-[10px] text-slate-400">ล่าสุด: ${active}</div></td>
@@ -947,6 +1125,15 @@
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
             }
+        }
+
+        // --- NEW: Preview Feature ---
+        function previewLessonContent() {
+            const content = document.getElementById('editContent').value;
+            const title = document.getElementById('editTitle').value || 'ตัวอย่างบทเรียน';
+            document.getElementById('previewLessonTitle').innerText = title;
+            document.getElementById('previewLessonBody').innerHTML = content || '<p class="text-slate-400 text-center py-10">ยังไม่ได้ใส่เนื้อหา</p>';
+            document.getElementById('lessonPreviewModal').classList.remove('hidden');
         }
 
         async function fetchLessonsForAdmin() {
