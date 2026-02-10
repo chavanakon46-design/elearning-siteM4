@@ -3,691 +3,1132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-learning KRU Dream (Modern UI)</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>บทเรียนออนไลน์: การเขียนรายงานโครงงานคอมพิวเตอร์</title>
     
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* --- CSS มาตรฐาน (นำมาจาก Reference Code V.4.2) --- */
+        /* --- Custom Theme Overrides --- */
         :root {
-            --primary: #4f46e5; 
-            --primary-hover: #4338ca;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
+            --primary: #4f46e5;
+            --secondary: #6366f1;
+            --bg-color: #f8fafc;
         }
 
-        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: #1e293b;
+        }
 
-        /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-height: 85vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
+        /* Glassmorphism & Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 1rem;
+        }
+
+        .menu-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-left: 5px solid transparent;
+        }
         
-        /* Inputs & Buttons */
-        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
-        textarea { height: 120px; font-family: monospace; }
-        
-        .btn { display: inline-block; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: 0.2s; text-align: center; color: white;}
-        .btn-sm { padding: 4px 10px; font-size: 0.85rem; }
-        .btn-primary { background: var(--primary); }
-        .btn-primary:hover { background: var(--primary-hover); }
-        .btn-danger { background: var(--danger); }
-        .btn-success { background: var(--success); }
-        .btn-outline { background: white; border: 1px solid #d1d5db; color: var(--text-main); }
-        .btn-outline:hover { background: #eff6ff; border-color: var(--primary); color: var(--primary); }
-        
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-left-color: var(--primary);
+        }
+
+        .menu-bg-icon {
+            position: absolute;
+            right: -20px;
+            bottom: -20px;
+            font-size: 8rem;
+            opacity: 0.05;
+            color: var(--primary);
+            z-index: 0;
+            transition: all 0.5s ease;
+        }
+
+        .menu-card:hover .menu-bg-icon {
+            transform: scale(1.2) rotate(-10deg);
+            opacity: 0.1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         /* Utilities */
-        .hidden { display: none !important; }
-        .flex-gap { display: flex; gap: 10px; flex-wrap: wrap; }
-        .badge { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
-        .badge-time { background: #e0f2fe; color: #075985; padding: 4px 10px; border-radius: 12px; font-weight: bold; }
-        .w-full { width: 100%; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Menu Grid */
-        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .menu-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; cursor: pointer; background: #fff; transition: 0.2s; position: relative; overflow: hidden; }
-        .menu-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--primary); }
-        .topic-number { font-size: 3rem; font-weight: 900; color: #f3f4f6; position: absolute; right: -10px; top: -10px; z-index: 0; }
-        .topic-content { position: relative; z-index: 1; }
+        .status-badge {
+            @apply px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+        }
 
-        /* Lesson & Quiz Viewer */
-        .lesson-viewer { background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 20px; min-height: 200px; }
-        .quiz-container { background: white; padding: 20px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 20px; }
-        .question-box { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        
-        /* Quiz Options Styling */
-        .option-label { display: flex; align-items: center; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; margin-top: 5px; cursor: pointer; transition: 0.2s; gap: 10px; }
-        .option-label:hover { background: #f1f5f9; border-color: var(--primary); }
-        .option-label input[type="radio"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-
-        /* Admin & Tables */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        .data-table th, .data-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
-        .data-table th { background: #f3f4f6; font-weight: 600; }
-        .status-pass { color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        .status-fail { color: #991b1b; background: #fee2e2; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        
-        /* Modal */
-        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; display:flex; justify-content:center; align-items:center; }
-        .modal-box { background:white; width:90%; max-width:900px; padding:25px; border-radius:10px; max-height:90vh; overflow-y:auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-
-        /* Tabs */
-        .tab-group { border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; display: flex; gap: 20px; }
-        .tab-btn { padding: 10px 10px; cursor: pointer; color: #6b7280; border-bottom: 3px solid transparent; font-weight: 600; }
-        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-        /* Admin Quiz Editor Cards */
-        .quiz-editor-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 10px; position: relative; transition: 0.2s; }
-        .quiz-editor-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-color: var(--primary); }
-        .quiz-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
-        
-        /* Modal Form Styles */
-        .opt-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #f1f5f9; }
-        .opt-row input[type="radio"] { width: 20px; height: 20px; }
-        .opt-row input[type="text"] { margin: 0; }
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-<div class="container">
-    
-    <header class="header">
-        <div>
-            <h1 id="appTitle" style="margin:0; color: var(--primary);">Loading...</h1>
-            <small id="appSubtitle" style="color: #6b7280;">Loading...</small>
+    <!-- Loading Spinner -->
+    <div id="loadingOverlay" class="hidden">
+        <div class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+            <p class="text-indigo-600 font-bold animate-pulse">กำลังโหลดข้อมูล...</p>
         </div>
-        <div id="userInfo" class="hidden text-right">
-            <div style="margin-bottom: 5px;">
-                <span id="userDisplay" style="font-weight: bold; font-size: 1.1rem;"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-lg">
+                    <i class="fa-solid fa-book-open text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 leading-tight">KRU DREAM E-Learning</h1>
+                    <p class="text-xs text-slate-500 font-medium">การเขียนรายงานโครงงานคอมพิวเตอร์</p>
+                </div>
             </div>
-            <div class="flex-gap" style="justify-content: flex-end; align-items: center;">
-                <div id="timerDisplay" class="badge-time hidden">⏱ 00:00</div>
-                <button onclick="openProfile()" class="btn btn-sm btn-outline">👤 ประวัติ</button>
-                <button onclick="logout()" class="btn btn-sm btn-danger">ออก</button>
+
+            <div id="userInfo" class="hidden flex items-center gap-4">
+                <div class="hidden md:block text-right">
+                    <div id="userDisplay" class="text-sm font-bold text-indigo-700"></div>
+                    <div id="timerDisplay" class="text-xs text-slate-500 font-mono hidden">
+                        <i class="fa-regular fa-clock"></i> <span>00:00</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openProfile()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-full transition relative group" title="ประวัติการเรียน">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </button>
+                    <button onclick="logout()" class="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-full transition group" title="ออกจากระบบ">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <div id="loginSection" class="text-center" style="padding: 60px 0;">
-        <h2 style="color: var(--text-main);">เข้าสู่ระบบห้องเรียน</h2>
-        <div style="max-width: 350px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <input type="text" id="stdName" placeholder="ชื่อ-นามสกุล (เว้นวรรค 1 เคาะ)">
-            <input type="text" id="stdClass" placeholder="ชั้น (เช่น ม.4/1)">
-            <input type="number" id="stdNumber" placeholder="เลขที่">
-            <button onclick="handleLogin()" class="btn btn-primary w-full" style="margin-top: 15px;">เข้าสู่ระบบ</button>  
-        </div>
-    </div>
-    
-    <div id="studentDashboard" class="hidden">
-        <div id="mainMenu">
-            <h3 style="margin-bottom: 20px;">📚 เลือกบทเรียน</h3>
-            <div class="grid-menu" id="topicGrid"></div>
-        </div>
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
 
-        <div id="contentArea" class="hidden">
-            <div class="header" style="border:none; padding-bottom:0; margin-bottom: 10px;">
-                <h2 id="lessonTitle" style="margin:0;">หัวข้อบทเรียน</h2>
-                <button onclick="backToDash()" class="btn btn-outline btn-sm">⬅ กลับหน้าหลัก</button>
-            </div>
-
-            <div class="tab-group">
-                <div id="tab-learn" class="tab-btn active" onclick="switchContentTab('learn')">📖 เนื้อหาบทเรียน</div>
-                <div id="tab-quiz" class="tab-btn" onclick="switchContentTab('quiz')">📝 แบบทดสอบท้ายหน่วย</div>
-            </div>
-
-            <div id="view-learn">
-                <div id="lessonViewer" class="lesson-viewer"></div>
-            </div>
-            <div id="view-quiz" class="hidden">
-                <div id="quizArea" class="quiz-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="adminDashboard" class="hidden">
-        <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px solid #fdba74; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0; color:#9a3412;">🔧 ระบบจัดการ (Admin)</h3>
-            <button onclick="logout()" class="btn btn-danger btn-sm">ออกจากระบบ Admin</button>
-        </div>
-        
-        <div class="tab-group">
-            <div class="tab-btn active" onclick="switchAdminTab('content')">จัดการเนื้อหา</div>
-            <div class="tab-btn" onclick="switchAdminTab('monitor')">ติดตามผู้เรียน</div>
-        </div>
-
-        <div id="admin-tab-content" style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 280px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; background: #fff; height: 500px; overflow-y: auto;">
-                <h4 style="margin-top:0;">เลือกบทเรียนเพื่อแก้ไข</h4>
-                <div id="adminLessonList"></div>
-                <button onclick="prepareNewLesson()" class="btn btn-success w-full" style="margin-top:10px;">+ สร้างบทเรียนใหม่</button>
-            </div>
-            
-            <div style="flex: 2; min-width: 350px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: #fff;">
-                <h4 style="margin-top:0;">📝 Editor</h4>
-                <input type="hidden" id="editId">
-                <label>หัวข้อ:</label>
-                <input type="text" id="editTitle" placeholder="ชื่อบทเรียน">
-                <label>หมวดหมู่:</label>
-                <select id="editCategory"></select>
-                <label>เนื้อหา (HTML):</label>
-                <textarea id="editContent" placeholder="ใส่ HTML หรือ Iframe ที่นี่..."></textarea>
-                
-                <hr style="margin: 20px 0;">
-                
-                <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0;">🧠 สร้างข้อสอบ</h4>
-                        <button onclick="openQuestionModal()" class="btn btn-outline btn-sm">+ เพิ่มข้อสอบ</button>
+        <!-- 1. Login Section -->
+        <section id="loginSection" class="max-w-md mx-auto fade-in">
+            <div class="glass-card p-8 mt-10">
+                <div class="text-center mb-8">
+                    <div class="inline-block p-4 rounded-full bg-indigo-50 mb-4">
+                        <i class="fa-solid fa-school text-4xl text-indigo-600"></i>
                     </div>
-                    <div id="qList"></div>
+                    <h2 class="text-2xl font-bold text-slate-800">เข้าสู่ระบบห้องเรียน</h2>
+                    <p class="text-slate-500 text-sm">กรอกข้อมูลเพื่อเริ่มต้นบทเรียน</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุล (ภาษาไทย)</label>
+                        <input type="text" id="stdName" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none" placeholder="เช่น เด็กชายรักดี มีวินัย">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">ระดับชั้น</label>
+                            <select id="stdClass" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">เลือกชั้น</option>
+                                <option value="ม.4/1">ม.4/1</option>
+                                <option value="ม.4/2">ม.4/2</option>
+                                <option value="ม.4/3">ม.4/3</option>
+                                <option value="ม.4/4">ม.4/4</option>
+                                <option value="ม.4/5">ม.4/5</option>
+                                <option value="ม.4/6">ม.4/6</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่</label>
+                            <input type="number" id="stdNumber" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="เช่น 15">
+                        </div>
+                    </div>
+                    
+                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-lg hover:shadow-xl transition transform active:scale-95 flex justify-center items-center gap-2">
+                        <span>เข้าสู่บทเรียน</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <div class="mt-4 text-center">
+                        <span class="text-xs text-slate-400">ระบบบันทึกความก้าวหน้าอัตโนมัติ</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Student Dashboard -->
+        <section id="studentDashboard" class="hidden fade-in">
+            <!-- Main Menu (Lesson Selector) -->
+            <div id="mainMenu">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800"><i class="fa-solid fa-layer-group text-indigo-500 mr-2"></i> เลือกบทเรียน</h2>
+                    <div class="text-sm text-slate-500">บทเรียนทั้งหมด 5 บท</div>
                 </div>
                 
-                <div class="flex-gap" style="margin-top: 20px;">
-                    <button onclick="saveLessonToDB()" class="btn btn-primary">บันทึกทั้งหมด</button>
-                    <button onclick="deleteLesson()" class="btn btn-danger">ลบบทเรียน</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="topicGrid">
+                    <!-- Javascript will render grid items here -->
+                </div>
+            </div>
+
+            <!-- Content Viewer (Learning & Quiz) -->
+            <div id="contentArea" class="hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <div>
+                        <h2 id="lessonTitle" class="text-xl font-bold text-slate-800">หัวข้อบทเรียน</h2>
+                        <p class="text-sm text-slate-500">ศึกษาเนื้อหาให้ครบถ้วนก่อนทำแบบทดสอบ</p>
+                    </div>
+                    <button onclick="backToDash()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-chevron-left"></i> กลับหน้าหลัก
+                    </button>
+                </div>
+
+                <div class="glass-card overflow-hidden">
+                    <div class="flex border-b border-slate-200">
+                        <button id="tab-learn" class="flex-1 py-4 text-center font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition border-b-2 border-transparent" onclick="switchContentTab('learn')">
+                            <i class="fa-solid fa-book-reader mr-2"></i> เนื้อหาบทเรียน
+                        </button>
+                        <button id="tab-quiz" class="flex-1 py-4 text-center font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition border-b-2 border-transparent" onclick="switchContentTab('quiz')">
+                            <i class="fa-solid fa-pen-to-square mr-2"></i> แบบทดสอบท้ายหน่วย
+                        </button>
+                    </div>
+
+                    <div class="p-6 md:p-8 min-h-[500px]">
+                        <!-- Learn View -->
+                        <div id="view-learn" class="prose max-w-none text-slate-700">
+                            <div id="lessonViewer" class="leading-relaxed"></div>
+                        </div>
+
+                        <!-- Quiz View -->
+                        <div id="view-quiz" class="hidden max-w-3xl mx-auto">
+                            <div id="quizArea" class="space-y-6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Admin Dashboard -->
+        <section id="adminDashboard" class="hidden fade-in">
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6 rounded-xl shadow-lg mb-8 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold mb-1"><i class="fa-solid fa-user-shield mr-2"></i> แผงควบคุมผู้สอน</h2>
+                    <p class="text-slate-300 text-sm">จัดการเนื้อหาและติดตามผลการเรียน</p>
+                </div>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition">
+                    ออกจากระบบ Admin
+                </button>
+            </div>
+
+            <!-- Admin Tabs -->
+            <div class="flex gap-4 mb-6 border-b border-slate-200 pb-2">
+                <button onclick="switchAdminTab('monitor')" id="adm-tab-monitor" class="px-4 py-2 font-bold text-indigo-600 border-b-2 border-indigo-600 transition">
+                    ติดตามผู้เรียน
+                </button>
+                <button onclick="switchAdminTab('content')" id="adm-tab-content" class="px-4 py-2 font-bold text-slate-500 hover:text-indigo-600 border-b-2 border-transparent transition">
+                    จัดการเนื้อหา/ข้อสอบ
+                </button>
+            </div>
+
+            <!-- Tab: Monitor (Tracking) -->
+            <div id="admin-monitor-view">
+                <div class="glass-card p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-list-ol mr-2"></i> รายชื่อนักเรียนและความก้าวหน้า</h3>
+                        
+                        <div class="flex gap-2">
+                            <!-- Sorting Control -->
+                            <select id="sortStudentSelect" onchange="fetchStudentMonitor()" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="recent">🕒 อัปเดตล่าสุด</option>
+                                <option value="score_desc">🏆 คะแนน (มาก -> น้อย)</option>
+                                <option value="score_asc">📉 คะแนน (น้อย -> มาก)</option>
+                                <option value="number_asc">🔢 เลขที่ (น้อย -> มาก)</option>
+                                <option value="number_desc">🔢 เลขที่ (มาก -> น้อย)</option>
+                            </select>
+                            <button onclick="fetchStudentMonitor()" class="bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-100 transition">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-lg border border-slate-200">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold">
+                                <tr>
+                                    <th class="p-4">เลขที่/ชั้น</th>
+                                    <th class="p-4">ชื่อ-นามสกุล</th>
+                                    <th class="p-4 text-center">บทที่จบ</th>
+                                    <th class="p-4 text-center">เวลาเรียนรวม</th>
+                                    <th class="p-4 text-center">คะแนนรวม</th>
+                                    <th class="p-4 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monitorTableBody" class="divide-y divide-slate-100 bg-white">
+                                <!-- Data Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Content Editor -->
+            <div id="admin-content-view" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Lesson List -->
+                <div class="glass-card p-4 h-[600px] overflow-y-auto">
+                    <button onclick="prepareNewLesson()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg mb-4 shadow transition">
+                        <i class="fa-solid fa-plus mr-1"></i> สร้างบทเรียนใหม่
+                    </button>
+                    <div id="adminLessonList" class="space-y-2"></div>
+                </div>
+
+                <!-- Editor Form -->
+                <div class="glass-card p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">✏️ แก้ไขบทเรียน</h3>
+                    <input type="hidden" id="editId">
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">หัวข้อบทเรียน</label>
+                            <input type="text" id="editTitle" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">หมวดหมู่ (ID)</label>
+                            <select id="editCategory" class="w-full px-3 py-2 border rounded-lg bg-white outline-none">
+                                <!-- Config Options -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">เนื้อหา (HTML/Text/Youtube Embed)</label>
+                        <textarea id="editContent" class="w-full px-3 py-2 border rounded-lg h-40 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="<p>เนื้อหาบทเรียน...</p>"></textarea>
+                    </div>
+
+                    <!-- Quiz Editor Section -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-slate-700">❓ จัดการข้อสอบ</h4>
+                            <button onclick="openQuestionModal()" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 transition">
+                                + เพิ่มข้อสอบ
+                            </button>
+                        </div>
+                        <div id="qList" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button onclick="deleteLesson()" class="text-red-500 hover:text-red-700 px-4 py-2 text-sm font-bold">ลบบทเรียน</button>
+                        <button onclick="saveLessonToDB()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow transition">
+                            บันทึกข้อมูล
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+            <p>&copy; 2024 KRU DREAM E-Learning Platform. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Profile Modal -->
+    <div id="profileModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden">
+            <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-chart-line mr-2"></i> ผลการเรียนของฉัน</h3>
+                <button onclick="closeModal('profileModal')" class="hover:text-indigo-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-6 bg-indigo-50 p-4 rounded-lg">
+                    <div class="bg-indigo-100 p-3 rounded-full text-indigo-600 text-2xl"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-500 uppercase font-bold">เวลาเรียนสะสม</div>
+                        <div class="text-2xl font-bold text-slate-800"><span id="profileTotalTime">0</span> <span class="text-sm font-normal text-slate-500">นาที</span></div>
+                    </div>
+                </div>
+                
+                <h4 class="font-bold text-slate-700 mb-2 border-b pb-2">ประวัติการทำแบบทดสอบ</h4>
+                <div class="overflow-y-auto max-h-60">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-slate-500 bg-slate-50 sticky top-0"><tr><th class="p-2">วันที่</th><th class="p-2">บทเรียน</th><th class="p-2 text-center">คะแนน</th><th class="p-2 text-center">ผลลัพธ์</th></tr></thead>
+                        <tbody id="profileQuizTable" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="admin-tab-monitor" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3>📋 รายชื่อนักเรียน</h3>
-                <button onclick="fetchStudentMonitor()" class="btn btn-outline btn-sm">🔄 รีเฟรช</button>
+    <!-- 2. Admin Detail Modal -->
+    <div id="adminDetailModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <h3 class="font-bold text-lg"><i class="fa-solid fa-magnifying-glass-chart mr-2"></i> รายละเอียดนักเรียน</h3>
+                <button onclick="closeModal('adminDetailModal')" class="hover:text-slate-300"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div style="overflow-x:auto;">
-                <table class="data-table">
-                    <thead><tr><th>ชื่อ-สกุล</th><th>ชั้น/เลขที่</th><th>บทที่จบ</th><th>เวลาเรียน</th><th>จัดการ</th></tr></thead>
-                    <tbody id="monitorTableBody"></tbody>
+            <div class="p-6 overflow-y-auto">
+                <div id="admDetailHeader" class="mb-6 pb-4 border-b border-slate-200"></div>
+                <table class="w-full text-sm text-left border rounded-lg overflow-hidden">
+                    <thead class="bg-slate-100 text-slate-700 font-bold uppercase">
+                        <tr>
+                            <th class="p-3">บทเรียน</th>
+                            <th class="p-3 text-center">สถานะการเรียน</th>
+                            <th class="p-3 text-center">เวลาเรียน (นาที)</th>
+                            <th class="p-3 text-center">คะแนนล่าสุด</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admDetailBody" class="divide-y divide-slate-100 bg-white"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="profileModal" class="hidden modal-overlay">
-        <div class="modal-box">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>ผลการเรียนของฉัน</h2>
-                <button onclick="closeModal('profileModal')" class="btn btn-sm btn-danger">ปิด</button>
+    <!-- 3. Question Editor Modal -->
+    <div id="questionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-circle-question text-indigo-500 mr-2"></i> สร้าง/แก้ไขคำถาม</h3>
+            
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">โจทย์คำถาม</label>
+            <textarea id="qInputText" class="w-full p-3 border rounded-lg mb-4 h-24 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="พิมพ์โจทย์..."></textarea>
+            
+            <div class="flex justify-between items-center mb-2">
+                <label class="text-xs font-bold text-slate-500 uppercase">ตัวเลือกคำตอบ (ติ๊กถูกหน้าข้อที่ถูก)</label>
+                <button onclick="addOptionInput()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition font-bold">+ เพิ่มช้อยส์</button>
             </div>
-            <p>เวลาเรียนรวม: <span id="profileTotalTime" style="font-weight:bold; color:var(--primary); font-size:1.5rem;">0</span> นาที</p>
-            <table class="data-table"><thead><tr><th>วันที่</th><th>บทเรียน</th><th>คะแนน</th><th>ผล</th></tr></thead><tbody id="profileQuizTable"></tbody></table>
+            
+            <div id="optionInputsContainer" class="space-y-2 max-h-48 overflow-y-auto mb-6 pr-1"></div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('questionModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg">ยกเลิก</button>
+                <button onclick="saveQuestionToMemory()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow">ยืนยัน</button>
+            </div>
         </div>
     </div>
 
-    <div id="questionModal" class="hidden modal-overlay">
-        <div class="modal-box" style="max-width: 600px;">
-            <h3 style="margin-top:0;">✏️ จัดการข้อสอบ</h3>
-            <label>โจทย์คำถาม:</label>
-            <textarea id="qInputText" placeholder="พิมพ์คำถาม..." style="height: 80px;"></textarea>
-            
-            <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0;">
-                <label>ตัวเลือกคำตอบ (ติ๊กถูกหน้าข้อที่ถูก):</label>
-                <button onclick="addOptionInput()" class="btn btn-sm btn-success">+ เพิ่มตัวเลือก</button>
-            </div>
-            
-            <div id="optionInputsContainer"></div>
-            
-            <div style="margin-top: 20px; text-align: right; border-top: 1px solid #eee; padding-top: 15px;">
-                <button onclick="saveQuestionToMemory()" class="btn btn-primary">ยืนยัน</button>
-                <button onclick="closeModal('questionModal')" class="btn btn-danger">ยกเลิก</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="adminDetailModal" class="hidden modal-overlay">
-         <div class="modal-box">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2 id="admDetailTitle" style="margin:0;">รายละเอียด</h2>
-                <button onclick="closeModal('adminDetailModal')" class="btn btn-danger btn-sm">ปิด</button>
-            </div>
-            <table class="data-table" style="margin-top:20px;"><thead><tr><th>บทเรียน</th><th>สถานะ</th><th>เวลา</th><th>คะแนนล่าสุด</th></tr></thead><tbody id="admDetailBody"></tbody></table>
-         </div>
-    </div>
-
-</div>
-
-<script>
-    // =======================================================
-    // ⚙️ ส่วนตั้งค่า (CONFIG)
-    // =======================================================
-    const CONFIG = {
-        appName: "บทเรียนออนไลน์ เรื่อง การเขียนรายงานโครงงานคอมพิวเตอร์",
-        subTitle: "ความรู้ในการจัดทำโครงงานคอมพิวเตอร์",
-        supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
-        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydXZvdHdydWtycXd2YXVkYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzk3NTksImV4cCI6MjA4NDYxNTc1OX0.GkBklU6IxxNgpCZ3FmFdnAwqPGtJLbcyZxlO5YMD3PA',
-        units: [
-            { id: 'unit1', title: 'บทที่ 1: บทนำ' },
-            { id: 'unit2', title: 'บทที่ 2: เอกสารและทฤษฎีที่เกี่ยวข้อง' },
-            { id: 'unit3', title: 'บทที่ 3: ขั้นตอนและวิธีดำเนินการ' },
-            { id: 'unit4', title: 'บทที่ 4: ผลการดําเนินงาน' },
-            { id: 'unit5', title: 'บทที่ 5: สรุปผลการดําเนินงาน' },
-        ]
-    };
-
-    // =======================================================
-    // 🚀 ระบบทำงาน (System Logic)
-    // =======================================================
-    
-    let dbClient;
-    try {
-        if(CONFIG.supabaseUrl.includes('ใส่_')) {
-            console.warn("กรุณาใส่ Supabase URL/Key ในส่วน CONFIG");
-        } else {
-            dbClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-        }
-    } catch (e) { console.error("DB Init Error", e); }
-
-    let currentUser = null;
-    let currentLesson = null;
-    let studyTimer = null;
-    let secondsSpent = 0;
-    let editingQuizData = [];
-    let allLessonsCache = [];
-    let editingQuestionIndex = -1;
-
-    window.onload = function() {
-        document.getElementById('appTitle').innerText = CONFIG.appName;
-        document.getElementById('appSubtitle').innerText = CONFIG.subTitle;
-        initTopicGrid();
-        initAdminSelect();
-    };
-
-    function initTopicGrid() {
-        const grid = document.getElementById('topicGrid');
-        grid.innerHTML = '';
-        CONFIG.units.forEach((u, index) => {
-            const div = document.createElement('div');
-            div.className = 'menu-card';
-            div.onclick = () => loadLessonGroup(u.id);
-            div.innerHTML = `
-                <div class="topic-number">${index + 1}</div>
-                <div class="topic-content">
-                    <h3 style="margin-top:0; color:var(--primary);">${u.title}</h3>
-                    <small style="color:#6b7280;">คลิกเพื่อเรียน</small>
-                </div>`;
-            grid.appendChild(div);
-        });
-    }
-
-    function initAdminSelect() {
-        const sel = document.getElementById('editCategory');
-        sel.innerHTML = '';
-        CONFIG.units.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u.id; opt.innerText = u.title;
-            sel.appendChild(opt);
-        });
-    }
-
-    async function handleLogin() {
-        if (!dbClient) return alert("กรุณาตั้งค่า Supabase URL/KEY ในโค้ดก่อน");
-        const name = document.getElementById('stdName').value.trim();
-        const code = document.getElementById('stdNumber').value.trim();
-        const sClass = document.getElementById('stdClass').value.trim();
-
-        if (!name || !code) return alert("กรอกข้อมูลให้ครบ");
-
-        if (name.toLowerCase() === 'admin' && code === '1234') {
-            currentUser = { role: 'admin', name: 'Administrator' };
-            switchPage('adminDashboard');
-            fetchLessonsForAdmin();
-            return;
-        }
-
-        let { data: user, error } = await dbClient.from('student_progress')
-            .select('*').eq('student_name', name).eq('student_number', code).single();
-
-        if (!user) {
-            const { data: newUser, error: err } = await dbClient.from('student_progress')
-                .insert([{ student_name: name, student_class: sClass, student_number: code, study_time: {}, completed_lessons: [] }])
-                .select().single();
-            if (err) return alert("Error: " + err.message);
-            user = newUser;
-        } else {
-            await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
-        }
-
-        currentUser = user;
-        if(!currentUser.study_time) currentUser.study_time = {};
-        if(!currentUser.completed_lessons) currentUser.completed_lessons = [];
-        
-        document.getElementById('userDisplay').innerText = `👋 ${currentUser.student_name}`;
-        document.getElementById('userInfo').classList.remove('hidden');
-        switchPage('studentDashboard');
-    }
-
-    function logout() { stopLessonTimer(); location.reload(); }
-    function switchPage(pid) {
-        ['loginSection','studentDashboard','adminDashboard'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-        document.getElementById(pid).classList.remove('hidden');
-    }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-    async function loadLessonGroup(catId) {
-        const { data } = await dbClient.from('lessons').select('*').eq('category', catId).limit(1).single();
-        if (!data) return alert("ยังไม่มีบทเรียนในหัวข้อนี้ (Admin ต้องเพิ่มก่อน)");
-
-        document.getElementById('mainMenu').classList.add('hidden');
-        document.getElementById('contentArea').classList.remove('hidden');
-        currentLesson = data;
-        
-        const unitInfo = CONFIG.units.find(u => u.id === catId);
-        document.getElementById('lessonTitle').innerText = unitInfo ? unitInfo.title : currentLesson.title;
-        switchContentTab('learn');
-    }
-
-    function switchContentTab(tab) {
-        // Handle Tabs Styles
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        if(tab === 'learn') {
-            document.getElementById('tab-learn').classList.add('active');
-            document.getElementById('view-learn').classList.remove('hidden');
-            document.getElementById('view-quiz').classList.add('hidden');
-            document.getElementById('lessonViewer').innerHTML = currentLesson.content;
-            startTimer();
-        } else {
-            document.getElementById('tab-quiz').classList.add('active');
-            document.getElementById('view-learn').classList.add('hidden');
-            document.getElementById('view-quiz').classList.remove('hidden');
-            stopLessonTimer();
-            renderStudentQuiz();
-        }
-    }
-    
-    function backToDash() {
-        stopLessonTimer();
-        document.getElementById('contentArea').classList.add('hidden');
-        document.getElementById('mainMenu').classList.remove('hidden');
-    }
-
-    function startTimer() {
-        stopLessonTimer();
-        secondsSpent = 0;
-        document.getElementById('timerDisplay').classList.remove('hidden');
-        studyTimer = setInterval(() => {
-            secondsSpent++;
-            const m = Math.floor(secondsSpent/60).toString().padStart(2,'0');
-            const s = (secondsSpent%60).toString().padStart(2,'0');
-            document.getElementById('timerDisplay').innerText = `⏱ ${m}:${s}`;
-        }, 1000);
-        
-        if(!currentUser.completed_lessons.includes(currentLesson.id)) {
-             currentUser.completed_lessons.push(currentLesson.id);
-             dbClient.from('student_progress').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then();
-        }
-    }
-    async function stopLessonTimer() {
-        if(studyTimer) {
-            clearInterval(studyTimer);
-            document.getElementById('timerDisplay').classList.add('hidden');
-            if(currentUser && currentLesson) {
-                const oldTime = currentUser.study_time[currentLesson.category] || 0;
-                currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
-                await dbClient.from('student_progress').update({ study_time: currentUser.study_time }).eq('id', currentUser.id);
-            }
-            studyTimer = null;
-        }
-    }
-
-    // --- New Student Quiz Renderer ---
-    function renderStudentQuiz() {
-        const div = document.getElementById('quizArea');
-        div.innerHTML = '';
-        if(!currentLesson.quiz_data || !currentLesson.quiz_data.length) return div.innerHTML = '<p style="text-align:center; color:#888;">ยังไม่มีแบบทดสอบในบทเรียนนี้</p>';
-
-        div.innerHTML = `<h3 style="margin-top:0;">แบบทดสอบ: ${currentLesson.title}</h3>`;
-        currentLesson.quiz_data.forEach((q, i) => {
-            let opts = '';
-            q.options.forEach((o, oi) => {
-                opts += `<label class="option-label">
-                            <input type="radio" name="q_${i}" value="${oi}"> 
-                            <span>${o}</span>
-                        </label>`;
-            });
-            div.innerHTML += `<div class="question-box"><p><b>ข้อที่ ${i+1}.</b> ${q.question}</p><div>${opts}</div></div>`;
-        });
-        div.innerHTML += `<button onclick="submitQuiz()" class="btn btn-primary w-full" style="padding:15px; font-size:1.1rem;">ส่งคำตอบ</button>`;
-    }
-
-    async function submitQuiz() {
-        if(!confirm("ยืนยันส่งคำตอบ?")) return;
-        let score = 0;
-        currentLesson.quiz_data.forEach((q, i) => {
-            const sel = document.querySelector(`input[name="q_${i}"]:checked`);
-            if(sel && parseInt(sel.value) === parseInt(q.correct)) score++;
-        });
-        alert(`คุณได้คะแนน ${score} / ${currentLesson.quiz_data.length}`);
-        await dbClient.from('quiz_results').insert([{
-            student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: currentLesson.quiz_data.length, passed: (score/currentLesson.quiz_data.length >= 0.7)
-        }]);
-        backToDash();
-    }
-
-    async function openProfile() {
-        let total = 0;
-        if(currentUser.study_time) Object.values(currentUser.study_time).forEach(t => total+=t);
-        document.getElementById('profileTotalTime').innerText = Math.floor(total/60);
-        
-        const { data: res } = await dbClient.from('quiz_results').select('*, lessons(title,category)').eq('student_id', currentUser.id).order('created_at',{ascending:false});
-        const tb = document.getElementById('profileQuizTable');
-        tb.innerHTML = '';
-        if(res) res.forEach(r => {
-           const title = r.lessons ? r.lessons.title : '-';
-           const resultBadge = r.passed ? '<span class="status-pass">ผ่าน</span>' : '<span class="status-fail">ไม่ผ่าน</span>';
-           tb.innerHTML += `<tr><td>${new Date(r.created_at).toLocaleDateString()}</td><td>${title}</td><td>${r.score}/${r.total_score}</td><td>${resultBadge}</td></tr>`;
-        });
-        document.getElementById('profileModal').classList.remove('hidden');
-    }
-
-    function switchAdminTab(t) {
-        document.getElementById('admin-tab-content').style.display = t==='content'?'flex':'none';
-        document.getElementById('admin-tab-monitor').classList.toggle('hidden', t!=='monitor');
-    }
-
-    async function fetchLessonsForAdmin() {
-        const { data } = await dbClient.from('lessons').select('*').order('category');
-        allLessonsCache = data || [];
-        const div = document.getElementById('adminLessonList');
-        div.innerHTML = '';
-        allLessonsCache.forEach(l => {
-            div.innerHTML += `<div onclick='loadEditor(${l.id})' style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
-                <b>${l.category}</b>: ${l.title}
-            </div>`;
-        });
-    }
-
-    function prepareNewLesson() {
-        document.getElementById('editId').value = '';
-        document.getElementById('editTitle').value = '';
-        document.getElementById('editContent').value = '';
-        editingQuizData = [];
-        renderQuizList();
-    }
-
-    function loadEditor(id) {
-        const l = allLessonsCache.find(x => x.id == id);
-        document.getElementById('editId').value = l.id;
-        document.getElementById('editTitle').value = l.title;
-        document.getElementById('editCategory').value = l.category;
-        document.getElementById('editContent').value = l.content;
-        editingQuizData = l.quiz_data || [];
-        renderQuizList();
-    }
-
-    async function saveLessonToDB() {
-        const id = document.getElementById('editId').value;
-        const payload = {
-            title: document.getElementById('editTitle').value,
-            category: document.getElementById('editCategory').value,
-            content: document.getElementById('editContent').value,
-            quiz_data: editingQuizData
+    <!-- Script Logic -->
+    <script>
+        // ================= CONFIGURATION =================
+        const CONFIG = {
+            appName: "การเขียนรายงานโครงงานคอมพิวเตอร์",
+            // ใส่ Key ของคุณที่นี่ (ตามที่ให้มา)
+            supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
+            supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdydXZvdHdydWtycXd2YXVkYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzk3NTksImV4cCI6MjA4NDYxNTc1OX0.GkBklU6IxxNgpCZ3FmFdnAwqPGtJLbcyZxlO5YMD3PA',
+            units: [
+                { id: 'unit1', title: 'บทที่ 1: บทนำ', icon: 'fa-1' },
+                { id: 'unit2', title: 'บทที่ 2: เอกสารและทฤษฎีที่เกี่ยวข้อง', icon: 'fa-2' },
+                { id: 'unit3', title: 'บทที่ 3: ขั้นตอนและวิธีดำเนินการ', icon: 'fa-3' },
+                { id: 'unit4', title: 'บทที่ 4: ผลการดําเนินงาน', icon: 'fa-4' },
+                { id: 'unit5', title: 'บทที่ 5: สรุปผลการดําเนินงาน', icon: 'fa-5' },
+            ]
         };
-        if(!payload.title) return alert("ใส่ชื่อบทเรียน");
-        
-        const { error } = id 
-            ? await dbClient.from('lessons').update(payload).eq('id', id)
-            : await dbClient.from('lessons').insert([payload]);
-            
-        if(error) alert(error.message);
-        else { alert("บันทึกแล้ว"); fetchLessonsForAdmin(); }
-    }
 
-    async function deleteLesson() {
-        const id = document.getElementById('editId').value;
-        if(id && confirm("ลบจริงหรือไม่?")) {
-            await dbClient.from('lessons').delete().eq('id', id);
-            fetchLessonsForAdmin(); prepareNewLesson();
+        // ================= STATE & INIT =================
+        let dbClient;
+        let currentUser = null;
+        let currentLesson = null;
+        let studyTimer = null;
+        let secondsSpent = 0;
+        let editingQuizData = [];
+        let allLessonsCache = [];
+        let editingQuestionIndex = -1;
+        let monitorDataCache = []; // Store for sorting
+
+        try {
+            dbClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+        } catch (e) { Swal.fire('Error', 'DB Connect Failed', 'error'); }
+
+        window.onload = function() {
+            initTopicGrid();
+            initAdminSelect();
+            checkSession();
+        };
+
+        function checkSession() {
+            // Optional: Auto login if implement localstorage later
         }
-    }
 
-    // --- New Admin Quiz Editor Renderer (Card Style) ---
-    function renderQuizList() {
-        const div = document.getElementById('qList');
-        div.innerHTML = '';
-        if(editingQuizData.length === 0) div.innerHTML = '<p style="color:#aaa; text-align:center;">ยังไม่มีข้อสอบ</p>';
-        
-        editingQuizData.forEach((q, i) => {
-            div.innerHTML += `<div class="quiz-editor-card">
-                <div style="font-weight:bold; color:var(--primary);">ข้อที่ ${i+1}</div>
-                <div style="margin:5px 0;">${q.question}</div>
-                <div style="font-size:0.85rem; color:#6b7280;">เฉลย: ${q.options[q.correct]} (จาก ${q.options.length} ตัวเลือก)</div>
-                <div class="quiz-actions">
-                    <button onclick="editQ(${i})" class="btn btn-sm btn-outline">✏️ แก้ไข</button>
-                    <button onclick="delQ(${i})" class="btn btn-sm btn-danger">🗑 ลบ</button>
-                </div>
-            </div>`;
-        });
-    }
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+        }
 
-    function openQuestionModal() {
-        editingQuestionIndex = -1;
-        document.getElementById('qInputText').value = '';
-        document.getElementById('optionInputsContainer').innerHTML = '';
-        addOptionInput(); addOptionInput(); // Default 2 options
-        document.getElementById('questionModal').classList.remove('hidden');
-    }
+        // ================= AUTHENTICATION =================
+        async function handleLogin() {
+            const name = document.getElementById('stdName').value.trim();
+            const sClass = document.getElementById('stdClass').value.trim();
+            const code = document.getElementById('stdNumber').value.trim();
 
-    function addOptionInput(val='', isC=false) {
-        const d = document.createElement('div');
-        d.className = 'opt-row';
-        d.innerHTML = `<input type="radio" name="corr" ${isC?'checked':''}> <input type="text" class="opt-val" value="${val}" placeholder="ใส่ตัวเลือก..." style="margin:0;"> <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:#999;">✖</button>`;
-        document.getElementById('optionInputsContainer').appendChild(d);
-    }
+            if (!name || !sClass || !code) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบทุกช่อง', 'warning');
 
-    function saveQuestionToMemory() {
-        const q = document.getElementById('qInputText').value;
-        const opts = []; let corr = -1;
-        document.querySelectorAll('#optionInputsContainer .opt-row').forEach((r, i) => {
-            const val = r.querySelector('.opt-val').value.trim();
-            if(val) {
-                opts.push(val);
-                if(r.querySelector('input[name="corr"]').checked) corr = opts.length - 1; // Correct logic based on pushed array
+            // Admin Bypass
+            if (name.toLowerCase() === 'admin' && code === '9999') {
+                currentUser = { role: 'admin', name: 'Administrator' };
+                showSection('adminDashboard');
+                fetchLessonsForAdmin();
+                fetchStudentMonitor(); // Load initial data
+                return;
             }
-        });
 
-        if(corr === -1) return alert("กรุณาติ๊กถูกหน้าข้อที่เป็นเฉลย");
-        if(opts.length < 2) return alert("ต้องมีตัวเลือกอย่างน้อย 2 ข้อ");
-        
-        const obj = { question: q, options: opts, correct: corr };
-        
-        if(editingQuestionIndex === -1) editingQuizData.push(obj);
-        else editingQuizData[editingQuestionIndex] = obj;
-        
-        renderQuizList(); closeModal('questionModal');
-    }
+            showLoading(true);
+            try {
+                // Check existing user
+                let { data: user, error } = await dbClient.from('student_progress')
+                    .select('*')
+                    .eq('student_name', name)
+                    .eq('student_number', code)
+                    .eq('student_class', sClass)
+                    .single();
 
-    function editQ(i) {
-        editingQuestionIndex = i;
-        const d = editingQuizData[i];
-        document.getElementById('qInputText').value = d.question;
-        document.getElementById('optionInputsContainer').innerHTML = '';
-        d.options.forEach((o, idx) => addOptionInput(o, idx===parseInt(d.correct)));
-        document.getElementById('questionModal').classList.remove('hidden');
-    }
-
-    function delQ(i) {
-        if(confirm("ต้องการลบข้อนี้?")) { editingQuizData.splice(i,1); renderQuizList(); }
-    }
-
-    async function fetchStudentMonitor() {
-        const { data } = await dbClient.from('student_progress').select('*').order('last_login',{ascending:false});
-        const tb = document.getElementById('monitorTableBody');
-        tb.innerHTML = '';
-        data.forEach((s,i) => {
-            let t = 0; if(s.study_time) Object.values(s.study_time).forEach(v=>t+=v);
-            tb.innerHTML += `<tr>
-                <td>${s.student_name}</td>
-                <td>${s.student_class} #${s.student_number}</td>
-                <td><span class="badge">${s.completed_lessons?.length||0} บท</span></td>
-                <td>${Math.floor(t/60)} นาที</td>
-                <td><button class="btn btn-sm btn-primary" onclick="viewDetail(${i})">ดูข้อมูล</button></td>
-            </tr>`;
-        });
-        window.tempMonitorData = data;
-    }
-
-    // ฟังก์ชันดูรายละเอียดนักเรียน (แก้ไขแล้ว: แสดงคะแนน + สถานะเรียนจบถูกต้อง)
-    async function viewDetail(i) {
-        const s = window.tempMonitorData[i];
-
-        // 1. ดึงผลสอบทั้งหมดของนักเรียนคนนี้
-        const { data: qResults } = await dbClient
-            .from('quiz_results')
-            .select('*')
-            .eq('student_id', s.id)
-            .order('created_at', { ascending: false }); // เอาล่าสุดขึ้นก่อน
-
-        // 2. ดึงบทเรียนทั้งหมดเพื่อเอามาเทียบ ID (Mapping)
-        // เพราะ CONFIG.units เก็บเป็น string ('unit1') แต่ Database เก็บเป็น ID ตัวเลข
-        const { data: allLessons } = await dbClient.from('lessons').select('id, category');
-
-        const tb = document.getElementById('admDetailBody');
-        tb.innerHTML = '';
-
-        CONFIG.units.forEach(u => {
-            // หาว่า Unit นี้ (เช่น unit1) ตรงกับ Lesson ID อะไรใน Database
-            const targetLesson = allLessons ? allLessons.find(l => l.category === u.id) : null;
-
-            // --- ส่วนที่ 1: เวลาเรียน ---
-            const time = (s.study_time && s.study_time[u.id]) ? Math.floor(s.study_time[u.id]/60) : 0;
-
-            // --- ส่วนที่ 2: สถานะจบ (แก้ไข Bug) ---
-            // ต้องเช็คว่า completed_lessons (ที่เป็น ID) มี ID ของบทเรียนนี้ไหม
-            const isFin = targetLesson && s.completed_lessons?.includes(targetLesson.id);
-            
-            // --- ส่วนที่ 3: คะแนน (แก้ไข Bug) ---
-            let scoreDisplay = '-';
-            if (targetLesson && qResults) {
-                // หาผลสอบที่ lesson_id ตรงกับบทเรียนนี้
-                const match = qResults.find(r => r.lesson_id == targetLesson.id);
-                
-                if (match) {
-                    const badgeClass = match.passed ? 'status-pass' : 'status-fail';
-                    scoreDisplay = `<span class="${badgeClass}">${match.score}/${match.total_score}</span>`;
+                if (!user) {
+                    // Register new user
+                    const { data: newUser, error: err } = await dbClient.from('student_progress')
+                        .insert([{ 
+                            student_name: name, 
+                            student_class: sClass, 
+                            student_number: code, 
+                            study_time: {}, 
+                            completed_lessons: [],
+                            last_login: new Date()
+                        }])
+                        .select().single();
+                    
+                    if (err) throw err;
+                    user = newUser;
+                } else {
+                    // Update login time
+                    await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
                 }
+
+                currentUser = user;
+                setupUserUI();
+                showSection('studentDashboard');
+
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function setupUserUI() {
+            if (!currentUser.study_time) currentUser.study_time = {};
+            if (!currentUser.completed_lessons) currentUser.completed_lessons = [];
+            
+            document.getElementById('userDisplay').innerHTML = `<i class="fa-solid fa-circle-user mr-1"></i> ${currentUser.student_name} (${currentUser.student_class} เลขที่ ${currentUser.student_number})`;
+            document.getElementById('userInfo').classList.remove('hidden');
+        }
+
+        function logout() {
+            stopLessonTimer();
+            currentUser = null;
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('stdName').value = '';
+            document.getElementById('stdNumber').value = '';
+            showSection('loginSection');
+        }
+
+        // ================= NAVIGATION & UI =================
+        function showSection(id) {
+            ['loginSection', 'studentDashboard', 'adminDashboard'].forEach(sid => {
+                document.getElementById(sid).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function initTopicGrid() {
+            const grid = document.getElementById('topicGrid');
+            grid.innerHTML = '';
+            CONFIG.units.forEach((u, idx) => {
+                grid.innerHTML += `
+                    <div onclick="loadLessonGroup('${u.id}')" class="menu-card glass-card p-6 cursor-pointer bg-white group h-40 flex flex-col justify-center">
+                        <i class="fa-solid ${u.icon} menu-bg-icon"></i>
+                        <div class="relative z-10">
+                            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wider">Chapter 0${idx + 1}</span>
+                            <h3 class="text-lg font-bold text-slate-800 mt-1 group-hover:text-indigo-600 transition">${u.title}</h3>
+                            <div class="mt-3 flex items-center text-xs text-slate-500">
+                                <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md group-hover:bg-indigo-600 group-hover:text-white transition">คลิกเพื่อเรียน</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function initAdminSelect() {
+            const sel = document.getElementById('editCategory');
+            sel.innerHTML = '';
+            CONFIG.units.forEach(u => {
+                sel.innerHTML += `<option value="${u.id}">${u.title}</option>`;
+            });
+        }
+
+        // ================= STUDENT LEARNING LOGIC =================
+        async function loadLessonGroup(catId) {
+            showLoading(true);
+            try {
+                const { data } = await dbClient.from('lessons').select('*').eq('category', catId).single();
+                
+                if (!data) return Swal.fire('ขออภัย', 'เนื้อหาบทเรียนนี้ยังไม่เปิดใช้งาน (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
+
+                currentLesson = data;
+                document.getElementById('mainMenu').classList.add('hidden');
+                document.getElementById('contentArea').classList.remove('hidden');
+                document.getElementById('lessonTitle').innerHTML = `<span class="text-indigo-600 mr-2">#${catId}</span> ${currentLesson.title}`;
+                
+                switchContentTab('learn');
+            } catch (err) {
+                console.error(err);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function switchContentTab(tab) {
+            const btnLearn = document.getElementById('tab-learn');
+            const btnQuiz = document.getElementById('tab-quiz');
+            const viewLearn = document.getElementById('view-learn');
+            const viewQuiz = document.getElementById('view-quiz');
+
+            if (tab === 'learn') {
+                btnLearn.classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
+                btnQuiz.classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
+                viewLearn.classList.remove('hidden');
+                viewQuiz.classList.add('hidden');
+                
+                // Render Content
+                document.getElementById('lessonViewer').innerHTML = currentLesson.content || '<p class="text-center text-slate-400 py-10">ไม่พบเนื้อหา</p>';
+                startTimer();
+            } else {
+                btnQuiz.classList.add('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
+                btnLearn.classList.remove('text-indigo-600', 'border-indigo-600', 'bg-indigo-50');
+                viewQuiz.classList.remove('hidden');
+                viewLearn.classList.add('hidden');
+                
+                stopLessonTimer();
+                renderStudentQuiz();
+            }
+        }
+
+        function backToDash() {
+            stopLessonTimer();
+            document.getElementById('contentArea').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+        }
+
+        // ================= TIMER LOGIC =================
+        function startTimer() {
+            stopLessonTimer();
+            secondsSpent = 0;
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.classList.remove('hidden');
+            
+            studyTimer = setInterval(() => {
+                secondsSpent++;
+                const m = Math.floor(secondsSpent / 60).toString().padStart(2, '0');
+                const s = (secondsSpent % 60).toString().padStart(2, '0');
+                timerEl.querySelector('span').innerText = `${m}:${s}`;
+            }, 1000);
+
+            // Mark as completed in array if not exists
+            if (!currentUser.completed_lessons.includes(currentLesson.id)) {
+                currentUser.completed_lessons.push(currentLesson.id);
+                // Sync status quietly
+                dbClient.from('student_progress').update({ completed_lessons: currentUser.completed_lessons }).eq('id', currentUser.id).then();
+            }
+        }
+
+        async function stopLessonTimer() {
+            if (studyTimer) {
+                clearInterval(studyTimer);
+                document.getElementById('timerDisplay').classList.add('hidden');
+                
+                if (currentUser && currentLesson) {
+                    const oldTime = currentUser.study_time[currentLesson.category] || 0;
+                    currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
+                    // Save to DB
+                    await dbClient.from('student_progress').update({ study_time: currentUser.study_time }).eq('id', currentUser.id);
+                }
+                studyTimer = null;
+            }
+        }
+
+        // ================= QUIZ SYSTEM =================
+        function renderStudentQuiz() {
+            const div = document.getElementById('quizArea');
+            div.innerHTML = '';
+            
+            if (!currentLesson.quiz_data || !currentLesson.quiz_data.length) {
+                div.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="fa-solid fa-clipboard-list text-4xl text-slate-300 mb-4"></i>
+                        <p class="text-slate-500">ยังไม่มีแบบทดสอบในบทเรียนนี้</p>
+                    </div>`;
+                return;
             }
 
-            // Render แถวตาราง
-            tb.innerHTML += `<tr>
-                <td>${u.title}</td>
-                <td>${isFin ? '<span class="status-pass">จบแล้ว</span>' : '<span style="color:#ccc;">ยังไม่จบ</span>'}</td>
-                <td>${time} น.</td>
-                <td>${scoreDisplay}</td>
-            </tr>`;
-        });
+            div.innerHTML = `
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg mb-6">
+                    <h3 class="font-bold text-indigo-800">คำชี้แจง</h3>
+                    <p class="text-sm text-indigo-600">แบบทดสอบมีทั้งหมด ${currentLesson.quiz_data.length} ข้อ เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว</p>
+                </div>
+            `;
 
-        document.getElementById('adminDetailModal').classList.remove('hidden');
-    }
+            currentLesson.quiz_data.forEach((q, i) => {
+                let opts = '';
+                q.options.forEach((o, oi) => {
+                    opts += `
+                        <label class="flex items-center p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 hover:border-indigo-300 transition">
+                            <input type="radio" name="q_${i}" value="${oi}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                            <span class="ml-3 text-slate-700 text-sm">${o}</span>
+                        </label>
+                    `;
+                });
+                
+                div.innerHTML += `
+                    <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+                        <p class="font-bold text-slate-800 mb-4"><span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs mr-2">ข้อ ${i+1}</span> ${q.question}</p>
+                        <div class="space-y-2">${opts}</div>
+                    </div>
+                `;
+            });
 
-</script>
+            div.innerHTML += `
+                <button onclick="submitQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition mt-4">
+                    ส่งคำตอบและดูคะแนน
+                </button>
+            `;
+        }
+
+        async function submitQuiz() {
+            const result = await Swal.fire({
+                title: 'ยืนยันการส่งคำตอบ?',
+                text: "ตรวจสอบความถูกต้องก่อนส่ง",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                confirmButtonText: 'ส่งคำตอบ'
+            });
+
+            if (!result.isConfirmed) return;
+
+            showLoading(true);
+            let score = 0;
+            currentLesson.quiz_data.forEach((q, i) => {
+                const sel = document.querySelector(`input[name="q_${i}"]:checked`);
+                if (sel && parseInt(sel.value) === parseInt(q.correct)) score++;
+            });
+
+            const total = currentLesson.quiz_data.length;
+            const passed = (score / total) >= 0.5; // Pass at 50%
+
+            // Save Result
+            await dbClient.from('quiz_results').insert([{
+                student_id: currentUser.id, 
+                lesson_id: currentLesson.id, 
+                score: score, 
+                total_score: total, 
+                passed: passed
+            }]);
+
+            showLoading(false);
+            
+            Swal.fire({
+                title: passed ? 'ยอดเยี่ยม! ผ่านเกณฑ์' : 'พยายามอีกนิดนะ',
+                html: `<div class="text-4xl font-bold ${passed ? 'text-green-600':'text-red-500'} mb-2">${score} / ${total}</div>คะแนน`,
+                icon: passed ? 'success' : 'warning',
+                confirmButtonText: 'ตกลง'
+            }).then(() => {
+                backToDash();
+            });
+        }
+
+        // ================= PROFILE & REPORT =================
+        async function openProfile() {
+            showLoading(true);
+            
+            // Calc Time
+            let totalTime = 0;
+            if (currentUser.study_time) Object.values(currentUser.study_time).forEach(t => totalTime += t);
+            document.getElementById('profileTotalTime').innerText = Math.floor(totalTime / 60);
+
+            // Fetch History
+            const { data: res } = await dbClient.from('quiz_results')
+                .select('*, lessons(title, category)')
+                .eq('student_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            
+            const tb = document.getElementById('profileQuizTable');
+            tb.innerHTML = '';
+            
+            if (res && res.length > 0) {
+                res.forEach(r => {
+                    const title = r.lessons ? r.lessons.title : 'บทเรียนที่ถูกลบ';
+                    const badge = r.passed 
+                        ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">ผ่าน</span>' 
+                        : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">ไม่ผ่าน</span>';
+                    
+                    tb.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-50">
+                            <td class="p-2 text-slate-500">${new Date(r.created_at).toLocaleDateString('th-TH')}</td>
+                            <td class="p-2 font-medium text-slate-700">${title}</td>
+                            <td class="p-2 text-center font-bold">${r.score}/${r.total_score}</td>
+                            <td class="p-2 text-center">${badge}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">ยังไม่มีประวัติการสอบ</td></tr>';
+            }
+
+            showLoading(false);
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+
+        // ================= ADMIN LOGIC =================
+        function switchAdminTab(tab) {
+            document.getElementById('admin-monitor-view').classList.toggle('hidden', tab !== 'monitor');
+            document.getElementById('admin-content-view').classList.toggle('hidden', tab !== 'content');
+            
+            const tabMon = document.getElementById('adm-tab-monitor');
+            const tabCon = document.getElementById('adm-tab-content');
+
+            if(tab === 'monitor') {
+                tabMon.classList.add('border-indigo-600', 'text-indigo-600');
+                tabMon.classList.remove('border-transparent', 'text-slate-500');
+                tabCon.classList.remove('border-indigo-600', 'text-indigo-600');
+                tabCon.classList.add('border-transparent', 'text-slate-500');
+                fetchStudentMonitor(); // Refresh
+            } else {
+                tabCon.classList.add('border-indigo-600', 'text-indigo-600');
+                tabCon.classList.remove('border-transparent', 'text-slate-500');
+                tabMon.classList.remove('border-indigo-600', 'text-indigo-600');
+                tabMon.classList.add('border-transparent', 'text-slate-500');
+            }
+        }
+
+        async function fetchStudentMonitor() {
+            showLoading(true);
+            try {
+                // Fetch Students
+                let { data: students } = await dbClient.from('student_progress').select('*');
+                
+                // Fetch all quiz results for scoring calculation
+                const { data: results } = await dbClient.from('quiz_results').select('student_id, score');
+
+                // Pre-process data (calculate total score for sorting)
+                students = students.map(s => {
+                    // Sum score
+                    const myScores = results.filter(r => r.student_id === s.id);
+                    const totalScore = myScores.reduce((acc, curr) => acc + curr.score, 0);
+                    
+                    // Calc Total Time
+                    let totalTime = 0;
+                    if(s.study_time) Object.values(s.study_time).forEach(v => totalTime += v);
+
+                    return { ...s, totalScore, totalTime };
+                });
+
+                // --- SORTING LOGIC ---
+                const sortType = document.getElementById('sortStudentSelect').value;
+                
+                students.sort((a, b) => {
+                    if (sortType === 'recent') {
+                        return new Date(b.last_login || 0) - new Date(a.last_login || 0);
+                    } else if (sortType === 'score_desc') {
+                        return b.totalScore - a.totalScore;
+                    } else if (sortType === 'score_asc') {
+                        return a.totalScore - b.totalScore;
+                    } else if (sortType === 'number_asc') {
+                        return parseInt(a.student_number || 0) - parseInt(b.student_number || 0);
+                    } else if (sortType === 'number_desc') {
+                        return parseInt(b.student_number || 0) - parseInt(a.student_number || 0);
+                    }
+                    return 0;
+                });
+
+                // Store for Detail View
+                monitorDataCache = students;
+
+                // Render
+                const tb = document.getElementById('monitorTableBody');
+                tb.innerHTML = '';
+                
+                if(students.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">ไม่พบข้อมูลนักเรียน</td></tr>';
+                }
+
+                students.forEach((s, idx) => {
+                    const progressCount = s.completed_lessons ? s.completed_lessons.length : 0;
+                    const lastActive = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH') : '-';
+
+                    tb.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-50">
+                            <td class="p-4 font-mono text-indigo-600 font-bold">${s.student_number} <span class="text-xs text-slate-400 ml-1">(${s.student_class})</span></td>
+                            <td class="p-4 font-medium text-slate-700">
+                                ${s.student_name}
+                                <div class="text-xs text-slate-400">ใช้งานล่าสุด: ${lastActive}</div>
+                            </td>
+                            <td class="p-4 text-center"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">${progressCount} บท</span></td>
+                            <td class="p-4 text-center text-slate-600">${Math.floor(s.totalTime/60)} นาที</td>
+                            <td class="p-4 text-center font-bold text-green-600">${s.totalScore}</td>
+                            <td class="p-4 text-center">
+                                <button onclick="viewStudentDetail(${idx})" class="bg-white border border-slate-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                                    ดูรายละเอียด
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) { console.error(err); } 
+            finally { showLoading(false); }
+        }
+
+        async function viewStudentDetail(idx) {
+            const s = monitorDataCache[idx];
+            showLoading(true);
+
+            document.getElementById('admDetailHeader').innerHTML = `
+                <h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2>
+                <div class="flex gap-4 mt-2 text-sm text-slate-500">
+                    <span><i class="fa-solid fa-layer-group"></i> ชั้น ${s.student_class}</span>
+                    <span><i class="fa-solid fa-arrow-down-1-9"></i> เลขที่ ${s.student_number}</span>
+                </div>
+            `;
+
+            // Fetch detail data
+            const { data: qResults } = await dbClient.from('quiz_results').select('*').eq('student_id', s.id).order('created_at', {ascending:false});
+            const { data: allLessons } = await dbClient.from('lessons').select('id, category');
+
+            const tb = document.getElementById('admDetailBody');
+            tb.innerHTML = '';
+
+            CONFIG.units.forEach(u => {
+                const targetLesson = allLessons ? allLessons.find(l => l.category === u.id) : null;
+                const time = (s.study_time && s.study_time[u.id]) ? Math.floor(s.study_time[u.id]/60) : 0;
+                const isFin = targetLesson && s.completed_lessons?.includes(targetLesson.id);
+
+                let scoreDisplay = '<span class="text-slate-300">-</span>';
+                if (targetLesson && qResults) {
+                    const match = qResults.find(r => r.lesson_id == targetLesson.id); // Find latest because sorted desc
+                    if (match) {
+                        const color = match.passed ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+                        scoreDisplay = `<span class="${color} px-2 py-1 rounded font-bold text-xs">${match.score}/${match.total_score}</span>`;
+                    }
+                }
+
+                tb.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-700 font-medium">${u.title}</td>
+                        <td class="p-3 text-center">${isFin ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : '<i class="fa-regular fa-circle text-slate-300"></i>'}</td>
+                        <td class="p-3 text-center text-slate-600">${time}</td>
+                        <td class="p-3 text-center">${scoreDisplay}</td>
+                    </tr>
+                `;
+            });
+
+            showLoading(false);
+            document.getElementById('adminDetailModal').classList.remove('hidden');
+        }
+
+        // ================= CONTENT EDITOR LOGIC =================
+        async function fetchLessonsForAdmin() {
+            const { data } = await dbClient.from('lessons').select('*').order('category');
+            allLessonsCache = data || [];
+            const div = document.getElementById('adminLessonList');
+            div.innerHTML = '';
+            
+            allLessonsCache.forEach(l => {
+                div.innerHTML += `
+                    <div onclick="loadEditor(${l.id})" class="p-3 rounded-lg border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer transition group">
+                        <div class="text-xs font-bold text-indigo-500 mb-1">${l.category}</div>
+                        <div class="text-sm font-medium text-slate-700 group-hover:text-indigo-700 truncate">${l.title}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function prepareNewLesson() {
+            document.getElementById('editId').value = '';
+            document.getElementById('editTitle').value = '';
+            document.getElementById('editContent').value = '';
+            editingQuizData = [];
+            renderQuizList();
+        }
+
+        function loadEditor(id) {
+            const l = allLessonsCache.find(x => x.id == id);
+            if (!l) return;
+            document.getElementById('editId').value = l.id;
+            document.getElementById('editTitle').value = l.title;
+            document.getElementById('editCategory').value = l.category;
+            document.getElementById('editContent').value = l.content;
+            editingQuizData = l.quiz_data || [];
+            renderQuizList();
+        }
+
+        function renderQuizList() {
+            const div = document.getElementById('qList');
+            div.innerHTML = '';
+            if (editingQuizData.length === 0) {
+                div.innerHTML = '<div class="text-center text-slate-400 text-sm py-4">ไม่มีข้อมูลข้อสอบ</div>';
+                return;
+            }
+
+            editingQuizData.forEach((q, i) => {
+                div.innerHTML += `
+                    <div class="bg-white border border-slate-200 p-3 rounded-lg text-sm relative group hover:border-indigo-300 transition">
+                        <div class="font-bold text-slate-700 pr-16 truncate">${i+1}. ${q.question}</div>
+                        <div class="text-xs text-slate-500 mt-1">เฉลย: ${q.options[q.correct]}</div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="editQ(${i})" class="text-blue-500 hover:bg-blue-50 p-1 rounded"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="delQ(${i})" class="text-red-500 hover:bg-red-50 p-1 rounded"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function saveLessonToDB() {
+            const id = document.getElementById('editId').value;
+            const payload = {
+                title: document.getElementById('editTitle').value,
+                category: document.getElementById('editCategory').value,
+                content: document.getElementById('editContent').value,
+                quiz_data: editingQuizData
+            };
+            
+            if (!payload.title) return Swal.fire('เตือน', 'กรุณาใส่หัวข้อบทเรียน', 'warning');
+
+            showLoading(true);
+            const { error } = id 
+                ? await dbClient.from('lessons').update(payload).eq('id', id)
+                : await dbClient.from('lessons').insert([payload]);
+
+            showLoading(false);
+
+            if (error) Swal.fire('Error', error.message, 'error');
+            else {
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย', 'success');
+                fetchLessonsForAdmin();
+            }
+        }
+
+        async function deleteLesson() {
+            const id = document.getElementById('editId').value;
+            if (!id) return;
+            
+            const result = await Swal.fire({
+                title: 'ยืนยันลบบทเรียน?',
+                text: "ข้อมูลนี้ไม่สามารถกู้คืนได้",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ลบเลย'
+            });
+
+            if (result.isConfirmed) {
+                showLoading(true);
+                await dbClient.from('lessons').delete().eq('id', id);
+                showLoading(false);
+                fetchLessonsForAdmin();
+                prepareNewLesson();
+                Swal.fire('ลบแล้ว', 'บทเรียนถูกลบออกจากระบบ', 'success');
+            }
+        }
+
+        // --- Question Modal Logic ---
+        function openQuestionModal() {
+            editingQuestionIndex = -1;
+            document.getElementById('qInputText').value = '';
+            document.getElementById('optionInputsContainer').innerHTML = '';
+            addOptionInput(); addOptionInput(); addOptionInput(); addOptionInput(); // Default 4
+            document.getElementById('questionModal').classList.remove('hidden');
+        }
+
+        function addOptionInput(val = '', isCorrect = false) {
+            const container = document.getElementById('optionInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 mb-2 bg-slate-50 p-2 rounded border border-slate-200';
+            div.innerHTML = `
+                <input type="radio" name="corr_opt" class="w-4 h-4 cursor-pointer" ${isCorrect ? 'checked' : ''}>
+                <input type="text" class="opt-val w-full bg-transparent outline-none text-sm" value="${val}" placeholder="ตัวเลือก...">
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveQuestionToMemory() {
+            const q = document.getElementById('qInputText').value.trim();
+            const opts = [];
+            let corr = -1;
+            
+            const rows = document.querySelectorAll('#optionInputsContainer > div');
+            rows.forEach((r, idx) => {
+                const val = r.querySelector('.opt-val').value.trim();
+                if (val) {
+                    opts.push(val);
+                    if (r.querySelector('input[name="corr_opt"]').checked) corr = opts.length - 1;
+                }
+            });
+
+            if (!q) return Swal.fire('เตือน', 'กรุณาใส่โจทย์คำถาม', 'warning');
+            if (opts.length < 2) return Swal.fire('เตือน', 'ต้องมีตัวเลือกอย่างน้อย 2 ข้อ', 'warning');
+            if (corr === -1) return Swal.fire('เตือน', 'กรุณาเลือกข้อที่ถูกต้อง (ติ๊กวงกลม)', 'warning');
+
+            const obj = { question: q, options: opts, correct: corr };
+
+            if (editingQuestionIndex === -1) editingQuizData.push(obj);
+            else editingQuizData[editingQuestionIndex] = obj;
+
+            renderQuizList();
+            closeModal('questionModal');
+        }
+
+        function editQ(i) {
+            editingQuestionIndex = i;
+            const d = editingQuizData[i];
+            document.getElementById('qInputText').value = d.question;
+            const container = document.getElementById('optionInputsContainer');
+            container.innerHTML = '';
+            d.options.forEach((o, idx) => addOptionInput(o, idx === parseInt(d.correct)));
+            document.getElementById('questionModal').classList.remove('hidden');
+        }
+
+        function delQ(i) {
+            editingQuizData.splice(i, 1);
+            renderQuizList();
+        }
+
+    </script>
 </body>
 </html>
-
-
-
-
-
