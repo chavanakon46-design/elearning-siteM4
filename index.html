@@ -134,7 +134,7 @@
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         <!-- 1. Login Section (5-Digit Code Only) -->
-        <section id="loginSection" class="max-w-md mx-auto fade-in" style="animation-delay: 0.1s;">
+        <section id="loginSection" class="max-w-md mx-auto fade-in">
             <div class="glass-card p-8 mt-16 relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
                 
@@ -155,12 +155,12 @@
                         </div>
                     </div>
                     
-                    <button onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
+                    <button onclick="handleLogin()" id="btnLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
                         <span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>
                     </button>
                     
                     <div class="text-center pt-2">
-                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน ใช้รหัส: <span class="font-mono bg-slate-100 px-1 rounded"></span></p>
+                        <p class="text-xs text-slate-400">สำหรับครูผู้สอน ใช้รหัส: <span class="font-mono bg-slate-100 px-1 rounded">99999</span></p>
                     </div>
                 </div>
             </div>
@@ -255,6 +255,10 @@
                         </h3>
                         
                         <div class="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-lg">
+                            <button onclick="openAddStudentModal()" class="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-bold shadow-sm transition flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus"></i> เพิ่มนักเรียน
+                            </button>
+                            <div class="h-6 w-px bg-slate-300 mx-1"></div>
                             <span class="text-xs font-bold text-slate-500 px-2">เรียงตาม:</span>
                             <select id="sortStudentSelect" onchange="fetchStudentMonitor()" class="bg-white border-0 text-sm font-medium text-slate-700 rounded-md py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-indigo-500 cursor-pointer outline-none">
                                 <option value="recent">🕒 อัปเดตล่าสุด</option>
@@ -431,9 +435,48 @@
         </div>
     </div>
 
+    <!-- 4. Add Student Modal -->
+    <div id="addStudentModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4 fade-in">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-user-plus text-indigo-500"></i> เพิ่มนักเรียนใหม่</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" id="newStdName" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="เด็กชาย...">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชั้น</label>
+                        <select id="newStdClass" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ม.4/1">ม.4/1</option>
+                            <option value="ม.4/2">ม.4/2</option>
+                            <option value="ม.4/3">ม.4/3</option>
+                            <option value="ม.4/4">ม.4/4</option>
+                            <option value="ม.4/5">ม.4/5</option>
+                            <option value="ม.4/6">ม.4/6</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">เลขที่</label>
+                        <input type="number" id="newStdNumber" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-indigo-600">รหัสเข้าใช้งาน (5 หลัก)</label>
+                    <input type="text" id="newStdCode" maxlength="5" class="w-full p-2 border-2 border-indigo-100 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-center font-bold tracking-widest" placeholder="XXXXX">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                <button onclick="closeModal('addStudentModal')" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg font-bold transition">ยกเลิก</button>
+                <button onclick="saveStudentToDB()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // --- 1. CONFIGURATION ---
         const CONFIG = {
             appName: "การเขียนรายงานโครงงานคอมพิวเตอร์",
             supabaseUrl: 'https://gruvotwrukrqwvaudaro.supabase.co', 
@@ -447,18 +490,8 @@
             ]
         };
 
-        // --- 2. GLOBAL VARIABLES ---
-        let dbClient;
-        let currentUser = null;
-        let currentLesson = null;
-        let studyTimer = null;
-        let secondsSpent = 0;
-        let editingQuizData = [];
-        let allLessonsCache = [];
-        let editingQuestionIndex = -1;
-        let monitorDataCache = []; 
+        let dbClient, currentUser, currentLesson, studyTimer, secondsSpent = 0, editingQuizData = [], allLessonsCache = [], editingQuestionIndex = -1, monitorDataCache = []; 
 
-        // --- 3. INITIALIZATION ---
         try {
             dbClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
         } catch (e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error'); }
@@ -468,7 +501,7 @@
             initAdminSelect();
         };
 
-        // --- 4. AUTHENTICATION SYSTEM (Direct check) ---
+        // --- AUTH SYSTEM (Direct Check) ---
         async function handleLogin() {
             const code = document.getElementById('stdCode').value.trim();
 
@@ -476,30 +509,36 @@
                 return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
             }
 
-            // Admin Login Bypass
+            const btn = document.getElementById('btnLogin');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+            btn.disabled = true;
+
+            // Admin Login
             if (code === '99999') {
                 currentUser = { role: 'admin', name: 'Administrator' };
                 showSection('adminDashboard');
                 fetchLessonsForAdmin();
                 fetchStudentMonitor();
+                btn.innerHTML = '<span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>';
+                btn.disabled = false;
                 return;
             }
 
-            // Fetch Logic directly (no loading overlay)
             try {
-                // Simplified Query: Only check student_code directly
+                // Query student_progress table
                 const { data: user, error } = await dbClient.from('student_progress')
                     .select('*')
                     .eq('student_code', code)
                     .maybeSingle();
                 
                 if (error) throw error;
-                if (!user) throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ (กรุณาติดต่อครูผู้สอน)');
+                
+                if (!user) {
+                    throw new Error('ไม่พบรหัสนักเรียนนี้ในระบบ');
+                }
 
-                // Try to update login time (Fail silently if column missing)
-                try {
-                    await dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id);
-                } catch(e) { console.warn('Update last_login failed (Optional column)'); }
+                // Update last login (Silent)
+                dbClient.from('student_progress').update({ last_login: new Date() }).eq('id', user.id).then();
 
                 currentUser = user;
                 setupUserUI();
@@ -510,10 +549,13 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'เข้าสู่ระบบไม่สำเร็จ',
-                    text: err.message,
+                    text: err.message || 'โปรดตรวจสอบรหัสอีกครั้ง',
                     confirmButtonText: 'ตกลง',
                     confirmButtonColor: '#4f46e5'
                 });
+            } finally {
+                btn.innerHTML = '<span>เข้าสู่ระบบ</span> <i class="fa-solid fa-arrow-right"></i>';
+                btn.disabled = false;
             }
         }
 
@@ -521,8 +563,7 @@
             if (!currentUser.study_time) currentUser.study_time = {};
             if (!currentUser.completed_lessons) currentUser.completed_lessons = [];
             
-            // Prioritize correct column names
-            const name = currentUser.student_name || currentUser.name || 'นักเรียน';
+            const name = currentUser.student_name || 'นักเรียน';
             const sClass = currentUser.student_class || '-';
             const sNum = currentUser.student_number || '-';
 
@@ -548,7 +589,7 @@
 
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // --- 5. UI GENERATION ---
+        // --- UI & LOGIC ---
         function initTopicGrid() {
             const grid = document.getElementById('topicGrid');
             grid.innerHTML = '';
@@ -574,14 +615,14 @@
             CONFIG.units.forEach(u => sel.innerHTML += `<option value="${u.id}">${u.title}</option>`);
         }
 
-        // --- 6. LEARNING LOGIC ---
         async function loadLessonGroup(catId) {
+            // Simple loading toast
+            const toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+            
             try {
                 const { data } = await dbClient.from('lessons').select('*').eq('category', catId).maybeSingle();
                 
-                if (!data) {
-                    return Swal.fire('ขออภัย', 'บทเรียนนี้ยังไม่มีเนื้อหา (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
-                }
+                if (!data) return Swal.fire('ขออภัย', 'ยังไม่มีเนื้อหา (Admin ต้องเพิ่มข้อมูลก่อน)', 'info');
 
                 currentLesson = data;
                 document.getElementById('mainMenu').classList.add('hidden');
@@ -604,13 +645,11 @@
             if (tab === 'learn') {
                 btnLearn.classList.add('active'); btnQuiz.classList.remove('active');
                 viewLearn.classList.remove('hidden'); viewQuiz.classList.add('hidden');
-                
                 document.getElementById('lessonViewer').innerHTML = currentLesson.content || '<div class="text-center py-10 text-slate-400">ไม่พบเนื้อหา</div>';
                 startTimer();
             } else {
                 btnQuiz.classList.add('active'); btnLearn.classList.remove('active');
                 viewQuiz.classList.remove('hidden'); viewLearn.classList.add('hidden');
-                
                 stopLessonTimer();
                 renderStudentQuiz();
             }
@@ -645,7 +684,6 @@
             if (studyTimer) {
                 clearInterval(studyTimer);
                 document.getElementById('timerDisplay').classList.add('hidden');
-                
                 if (currentUser && currentLesson && currentUser.study_time) {
                     const oldTime = currentUser.study_time[currentLesson.category] || 0;
                     currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
@@ -655,7 +693,6 @@
             }
         }
 
-        // --- 7. QUIZ LOGIC ---
         function renderStudentQuiz() {
             const div = document.getElementById('quizArea');
             div.innerHTML = '';
@@ -665,56 +702,21 @@
                 return;
             }
 
-            div.innerHTML = `
-                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg mb-6">
-                    <h3 class="font-bold text-indigo-900">คำชี้แจงการสอบ</h3>
-                    <p class="text-sm text-indigo-700">ข้อสอบมีจำนวน ${currentLesson.quiz_data.length} ข้อ | เกณฑ์ผ่าน 50%</p>
-                </div>
-            `;
+            div.innerHTML = `<div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg mb-6"><h3 class="font-bold text-indigo-900">คำชี้แจงการสอบ</h3><p class="text-sm text-indigo-700">ข้อสอบมีจำนวน ${currentLesson.quiz_data.length} ข้อ | เกณฑ์ผ่าน 50%</p></div>`;
 
             currentLesson.quiz_data.forEach((q, i) => {
                 let opts = '';
                 q.options.forEach((o, oi) => {
-                    opts += `
-                        <label class="flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition group">
-                            <div class="relative flex items-center">
-                                <input type="radio" name="q_${i}" value="${oi}" class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-indigo-600 checked:bg-indigo-600 transition-all">
-                                <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100">
-                                    <i class="fa-solid fa-check text-[10px]"></i>
-                                </div>
-                            </div>
-                            <span class="ml-3 text-slate-700 font-medium group-hover:text-indigo-900">${o}</span>
-                        </label>
-                    `;
+                    opts += `<label class="flex items-center p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 transition group"><div class="relative flex items-center"><input type="radio" name="q_${i}" value="${oi}" class="peer h-5 w-5 cursor-pointer appearance-none rounded-full border border-slate-300 checked:border-indigo-600 checked:bg-indigo-600 transition-all"><div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100"><i class="fa-solid fa-check text-[10px]"></i></div></div><span class="ml-3 text-slate-700 font-medium group-hover:text-indigo-900">${o}</span></label>`;
                 });
-                
-                div.innerHTML += `
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-slate-200"></div>
-                        <p class="font-bold text-slate-800 mb-4 text-lg"><span class="text-slate-400 mr-2">Q${i+1}.</span> ${q.question}</p>
-                        <div class="space-y-3">${opts}</div>
-                    </div>
-                `;
+                div.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full bg-slate-200"></div><p class="font-bold text-slate-800 mb-4 text-lg"><span class="text-slate-400 mr-2">Q${i+1}.</span> ${q.question}</p><div class="space-y-3">${opts}</div></div>`;
             });
 
-            div.innerHTML += `
-                <button onclick="submitQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-[0.99] mt-4 flex items-center justify-center gap-2 text-lg">
-                    <i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ
-                </button>
-            `;
+            div.innerHTML += `<button onclick="submitQuiz()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-[0.99] mt-4 flex items-center justify-center gap-2 text-lg"><i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ</button>`;
         }
 
         async function submitQuiz() {
-            const result = await Swal.fire({
-                title: 'ยืนยันการส่งคำตอบ?',
-                text: "เมื่อส่งแล้วจะไม่สามารถแก้ไขได้",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                confirmButtonText: 'ส่งเลย',
-                cancelButtonText: 'ตรวจสอบก่อน'
-            });
-
+            const result = await Swal.fire({ title: 'ยืนยันการส่งคำตอบ?', text: "เมื่อส่งแล้วจะไม่สามารถแก้ไขได้", icon: 'question', showCancelButton: true, confirmButtonColor: '#4f46e5', confirmButtonText: 'ส่งเลย', cancelButtonText: 'ตรวจสอบก่อน' });
             if (!result.isConfirmed) return;
 
             let score = 0;
@@ -727,66 +729,31 @@
             const passed = (score / total) >= 0.5;
 
             try {
-                await dbClient.from('quiz_results').insert([{
-                    student_id: currentUser.id, 
-                    lesson_id: currentLesson.id, 
-                    score: score, 
-                    total_score: total, 
-                    passed: passed
-                }]);
-                
-                Swal.fire({
-                    title: passed ? 'ยินดีด้วย! ผ่านเกณฑ์' : 'พยายามอีกครั้งนะ',
-                    html: `<div class="flex justify-center my-4"><div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold ${passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${score}/${total}</div></div>`,
-                    confirmButtonText: 'กลับหน้าบทเรียน'
-                }).then(() => backToDash());
-
-            } catch(e) {
-                Swal.fire('Error', 'บันทึกคะแนนไม่สำเร็จ: ' + e.message, 'error');
-            }
+                await dbClient.from('quiz_results').insert([{ student_id: currentUser.id, lesson_id: currentLesson.id, score: score, total_score: total, passed: passed }]);
+                Swal.fire({ title: passed ? 'ยินดีด้วย! ผ่านเกณฑ์' : 'พยายามอีกครั้งนะ', html: `<div class="flex justify-center my-4"><div class="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold ${passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}">${score}/${total}</div></div>`, confirmButtonText: 'กลับหน้าบทเรียน' }).then(() => backToDash());
+            } catch(e) { Swal.fire('Error', 'บันทึกคะแนนไม่สำเร็จ: ' + e.message, 'error'); }
         }
 
-        // --- 8. ADMIN & MONITORING ---
+        // --- ADMIN ---
         function switchAdminTab(tab) {
             document.getElementById('admin-monitor-view').classList.toggle('hidden', tab !== 'monitor');
             document.getElementById('admin-content-view').classList.toggle('hidden', tab !== 'content');
-            
             const tabMon = document.getElementById('adm-tab-monitor');
             const tabCon = document.getElementById('adm-tab-content');
-
-            if(tab === 'monitor') {
-                tabMon.classList.add('border-indigo-600', 'text-indigo-600');
-                tabMon.classList.remove('border-transparent', 'text-slate-500');
-                tabCon.classList.remove('border-indigo-600', 'text-indigo-600');
-                tabCon.classList.add('border-transparent', 'text-slate-500');
-                fetchStudentMonitor(); 
-            } else {
-                tabCon.classList.add('border-indigo-600', 'text-indigo-600');
-                tabCon.classList.remove('border-transparent', 'text-slate-500');
-                tabMon.classList.remove('border-indigo-600', 'text-indigo-600');
-                tabMon.classList.add('border-transparent', 'text-slate-500');
-            }
+            if(tab === 'monitor') { tabMon.classList.add('border-indigo-600', 'text-indigo-600'); tabMon.classList.remove('border-transparent', 'text-slate-500'); tabCon.classList.remove('border-indigo-600', 'text-indigo-600'); tabCon.classList.add('border-transparent', 'text-slate-500'); fetchStudentMonitor(); } else { tabCon.classList.add('border-indigo-600', 'text-indigo-600'); tabCon.classList.remove('border-transparent', 'text-slate-500'); tabMon.classList.remove('border-indigo-600', 'text-indigo-600'); tabMon.classList.add('border-transparent', 'text-slate-500'); }
         }
 
         async function fetchStudentMonitor() {
             try {
-                // FIXED: Changed table name to 'student_progress'
                 let { data: students } = await dbClient.from('student_progress').select('*');
-                
                 const { data: results } = await dbClient.from('quiz_results').select('student_id, score');
-
                 students = students.map(s => {
                     const myScores = results ? results.filter(r => r.student_id === s.id) : [];
                     const totalScore = myScores.reduce((acc, curr) => acc + curr.score, 0);
-                    let totalTime = 0;
-                    if(s.study_time) Object.values(s.study_time).forEach(v => totalTime += v);
-                    
-                    s.name = s.student_name; 
-                    s.student_number = s.student_number; 
-
+                    let totalTime = 0; if(s.study_time) Object.values(s.study_time).forEach(v => totalTime += v);
+                    s.name = s.student_name; s.student_number = s.student_number; 
                     return { ...s, totalScore, totalTime };
                 });
-
                 const sortType = document.getElementById('sortStudentSelect').value;
                 students.sort((a, b) => {
                     if (sortType === 'recent') return new Date(b.last_login || 0) - new Date(a.last_login || 0);
@@ -796,81 +763,27 @@
                     if (sortType === 'number_desc') return (parseInt(b.student_number) || 0) - (parseInt(a.student_number) || 0);
                     return 0;
                 });
-
                 monitorDataCache = students;
-                const tb = document.getElementById('monitorTableBody');
-                tb.innerHTML = '';
-                
-                if(!students.length) {
-                    tb.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">ยังไม่มีนักเรียนในระบบ</td></tr>';
-                }
-
+                const tb = document.getElementById('monitorTableBody'); tb.innerHTML = '';
+                if(!students.length) { tb.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">ยังไม่มีนักเรียนในระบบ</td></tr>'; }
                 students.forEach((s, idx) => {
                     const progressCount = s.completed_lessons ? s.completed_lessons.length : 0;
                     const lastActive = s.last_login ? new Date(s.last_login).toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' }) : '-';
-
-                    tb.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition border-b border-slate-50">
-                            <td class="p-4">
-                                <div class="font-bold text-slate-800">${s.student_class || '-'}</div>
-                                <div class="text-xs text-slate-400 font-mono">#${s.student_number || '-'}</div>
-                            </td>
-                            <td class="p-4 font-mono text-indigo-600 font-bold tracking-wide">${s.student_code || '-'}</td>
-                            <td class="p-4 font-medium text-slate-700">
-                                ${s.student_name || 'ไม่ระบุชื่อ'}
-                                <div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ${lastActive}</div>
-                            </td>
-                            <td class="p-4 text-center">
-                                <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-bold">${progressCount} บท</span>
-                            </td>
-                            <td class="p-4 text-center text-slate-600 font-mono text-xs">
-                                ${Math.floor(s.totalTime/60)} นาที
-                            </td>
-                            <td class="p-4 text-center">
-                                <span class="font-bold text-green-600">${s.totalScore}</span>
-                            </td>
-                            <td class="p-4 text-center">
-                                <button onclick="viewStudentDetail(${idx})" class="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
-                                    <i class="fa-solid fa-eye"></i> รายละเอียด
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                    tb.innerHTML += `<tr class="hover:bg-slate-50 transition border-b border-slate-50"><td class="p-4"><div class="font-bold text-slate-800">${s.student_class || '-'}</div><div class="text-xs text-slate-400 font-mono">#${s.student_number || '-'}</div></td><td class="p-4 font-mono text-indigo-600 font-bold tracking-wide">${s.student_code || '-'}</td><td class="p-4 font-medium text-slate-700">${s.student_name || 'ไม่ระบุชื่อ'}<div class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> ${lastActive}</div></td><td class="p-4 text-center"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-bold">${progressCount} บท</span></td><td class="p-4 text-center text-slate-600 font-mono text-xs">${Math.floor(s.totalTime/60)} นาที</td><td class="p-4 text-center"><span class="font-bold text-green-600">${s.totalScore}</span></td><td class="p-4 text-center"><button onclick="viewStudentDetail(${idx})" class="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-lg font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> รายละเอียด</button></td></tr>`;
                 });
-
             } catch (err) { console.error(err); } 
         }
 
         async function viewStudentDetail(idx) {
             const s = monitorDataCache[idx];
-
-            document.getElementById('admDetailHeader').innerHTML = `
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">
-                        ${(s.student_name || '?').charAt(0)}
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2>
-                        <div class="flex gap-4 mt-1 text-xs font-bold text-slate-500 uppercase tracking-wide">
-                            <span><i class="fa-solid fa-layer-group"></i> ${s.student_class || '-'}</span>
-                            <span><i class="fa-solid fa-hashtag"></i> เลขที่ ${s.student_number || '-'}</span>
-                            <span class="text-indigo-600"><i class="fa-solid fa-key"></i> Code: ${s.student_code || '-'}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-
+            document.getElementById('admDetailHeader').innerHTML = `<div class="flex items-center gap-4"><div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">${(s.student_name || '?').charAt(0)}</div><div><h2 class="text-xl font-bold text-slate-800">${s.student_name}</h2><div class="flex gap-4 mt-1 text-xs font-bold text-slate-500 uppercase tracking-wide"><span><i class="fa-solid fa-layer-group"></i> ${s.student_class || '-'}</span><span><i class="fa-solid fa-hashtag"></i> เลขที่ ${s.student_number || '-'}</span><span class="text-indigo-600"><i class="fa-solid fa-key"></i> Code: ${s.student_code || '-'}</span></div></div></div>`;
             const { data: qResults } = await dbClient.from('quiz_results').select('*').eq('student_id', s.id).order('created_at', {ascending:false});
             const { data: allLessons } = await dbClient.from('lessons').select('id, category');
-
-            const tb = document.getElementById('admDetailBody');
-            tb.innerHTML = '';
-
+            const tb = document.getElementById('admDetailBody'); tb.innerHTML = '';
             CONFIG.units.forEach(u => {
                 const targetLesson = allLessons ? allLessons.find(l => l.category === u.id) : null;
                 const time = (s.study_time && s.study_time[u.id]) ? Math.floor(s.study_time[u.id]/60) : 0;
                 const isFin = targetLesson && s.completed_lessons?.includes(targetLesson.id);
-
                 let scoreDisplay = '<span class="text-slate-300">-</span>';
                 if (targetLesson && qResults) {
                     const match = qResults.find(r => r.lesson_id == targetLesson.id);
@@ -879,35 +792,61 @@
                         scoreDisplay = `<span class="${color} px-2 py-0.5 rounded text-xs font-bold">${match.score}/${match.total_score}</span>`;
                     }
                 }
-
-                tb.innerHTML += `
-                    <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
-                        <td class="p-4 text-slate-700 font-medium text-sm">${u.title}</td>
-                        <td class="p-4 text-center">${isFin ? '<i class="fa-solid fa-circle-check text-green-500 text-lg"></i>' : '<i class="fa-regular fa-circle text-slate-300 text-lg"></i>'}</td>
-                        <td class="p-4 text-center text-slate-600 text-xs font-mono">${time}</td>
-                        <td class="p-4 text-center">${scoreDisplay}</td>
-                    </tr>
-                `;
+                tb.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0"><td class="p-4 text-slate-700 font-medium text-sm">${u.title}</td><td class="p-4 text-center">${isFin ? '<i class="fa-solid fa-circle-check text-green-500 text-lg"></i>' : '<i class="fa-regular fa-circle text-slate-300 text-lg"></i>'}</td><td class="p-4 text-center text-slate-600 text-xs font-mono">${time}</td><td class="p-4 text-center">${scoreDisplay}</td></tr>`;
             });
-
             document.getElementById('adminDetailModal').classList.remove('hidden');
         }
 
-        // --- 9. CONTENT EDITOR LOGIC ---
+        // --- NEW: ADD STUDENT LOGIC ---
+        function openAddStudentModal() {
+            document.getElementById('newStdName').value = '';
+            document.getElementById('newStdNumber').value = '';
+            document.getElementById('newStdCode').value = '';
+            document.getElementById('addStudentModal').classList.remove('hidden');
+        }
+
+        async function saveStudentToDB() {
+            const name = document.getElementById('newStdName').value.trim();
+            const sClass = document.getElementById('newStdClass').value;
+            const number = document.getElementById('newStdNumber').value.trim();
+            const code = document.getElementById('newStdCode').value.trim();
+
+            if (!name || !number || !code) {
+                return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อ, เลขที่ และรหัสให้ครบถ้วน', 'warning');
+            }
+            if (code.length < 4) {
+                return Swal.fire('รหัสสั้นเกินไป', 'รหัสต้องมีอย่างน้อย 4 หลัก', 'warning');
+            }
+
+            try {
+                const { error } = await dbClient.from('student_progress').insert([{
+                    student_name: name,
+                    student_class: sClass,
+                    student_number: number,
+                    student_code: code,
+                    study_time: {},
+                    completed_lessons: []
+                }]);
+
+                if (error) throw error;
+
+                Swal.fire('สำเร็จ', `เพิ่มนักเรียน "${name}" เรียบร้อยแล้ว`, 'success');
+                closeModal('addStudentModal');
+                fetchStudentMonitor(); 
+
+            } catch (err) {
+                Swal.fire('บันทึกไม่สำเร็จ', err.message, 'error');
+            }
+        }
+
+        // --- CONTENT EDITOR ---
         async function fetchLessonsForAdmin() {
             const { data } = await dbClient.from('lessons').select('*').order('category');
             allLessonsCache = data || [];
             const div = document.getElementById('adminLessonList');
             div.innerHTML = '';
-            
             allLessonsCache.forEach(l => {
-                div.innerHTML += `
-                    <div onclick="loadEditor(${l.id})" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-indigo-300 hover:shadow-md cursor-pointer transition group relative">
-                        <div class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">${l.category}</div>
-                        <div class="text-sm font-bold text-slate-700 group-hover:text-indigo-700 truncate pr-6">${l.title}</div>
-                        <div class="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400"><i class="fa-solid fa-pen"></i></div>
-                    </div>
-                `;
+                div.innerHTML += `<div onclick="loadEditor(${l.id})" class="p-4 rounded-xl border border-slate-100 bg-white hover:border-indigo-300 hover:shadow-md cursor-pointer transition group relative"><div class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1">${l.category}</div><div class="text-sm font-bold text-slate-700 group-hover:text-indigo-700 truncate pr-6">${l.title}</div><div class="absolute top-4 right-4 text-slate-300 group-hover:text-indigo-400"><i class="fa-solid fa-pen"></i></div></div>`;
             });
         }
 
@@ -938,18 +877,8 @@
                 div.innerHTML = '<div class="text-center text-slate-400 text-xs py-4 border border-dashed rounded-lg">ยังไม่มีข้อสอบ</div>';
                 return;
             }
-
             editingQuizData.forEach((q, i) => {
-                div.innerHTML += `
-                    <div class="bg-white border border-slate-200 p-3 rounded-lg text-sm relative group hover:border-indigo-300 transition shadow-sm">
-                        <div class="font-bold text-slate-700 pr-16 truncate text-xs"><span class="text-indigo-500 mr-1">Q${i+1}.</span> ${q.question}</div>
-                        <div class="text-[10px] text-slate-500 mt-1 bg-slate-100 inline-block px-1.5 rounded">เฉลยข้อ: ${parseInt(q.correct)+1}</div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex gap-1">
-                            <button onclick="editQ(${i})" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="delQ(${i})" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
+                div.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-lg text-sm relative group hover:border-indigo-300 transition shadow-sm"><div class="font-bold text-slate-700 pr-16 truncate text-xs"><span class="text-indigo-500 mr-1">Q${i+1}.</span> ${q.question}</div><div class="text-[10px] text-slate-500 mt-1 bg-slate-100 inline-block px-1.5 rounded">เฉลยข้อ: ${parseInt(q.correct)+1}</div><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex gap-1"><button onclick="editQ(${i})" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><i class="fa-solid fa-pen"></i></button><button onclick="delQ(${i})" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button></div></div>`;
             });
         }
 
@@ -979,14 +908,7 @@
             const id = document.getElementById('editId').value;
             if (!id) return;
             
-            const result = await Swal.fire({
-                title: 'ยืนยันลบบทเรียน?',
-                text: "ข้อมูลนี้ไม่สามารถกู้คืนได้",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'ลบเลย'
-            });
+            const result = await Swal.fire({ title: 'ยืนยันลบบทเรียน?', text: "ข้อมูลนี้ไม่สามารถกู้คืนได้", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบเลย' });
 
             if (result.isConfirmed) {
                 await dbClient.from('lessons').delete().eq('id', id);
@@ -996,7 +918,6 @@
             }
         }
 
-        // --- Question Modal Helpers ---
         function openQuestionModal() {
             editingQuestionIndex = -1;
             document.getElementById('qInputText').value = '';
@@ -1009,11 +930,7 @@
             const container = document.getElementById('optionInputsContainer');
             const div = document.createElement('div');
             div.className = 'flex items-center gap-2 mb-2 bg-slate-50 p-2 rounded-lg border border-slate-200 focus-within:border-indigo-400 transition';
-            div.innerHTML = `
-                <input type="radio" name="corr_opt" class="w-4 h-4 cursor-pointer text-indigo-600 focus:ring-indigo-500" ${isCorrect ? 'checked' : ''}>
-                <input type="text" class="opt-val w-full bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400" value="${val}" placeholder="ตัวเลือก...">
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition"><i class="fa-solid fa-xmark"></i></button>
-            `;
+            div.innerHTML = `<input type="radio" name="corr_opt" class="w-4 h-4 cursor-pointer text-indigo-600 focus:ring-indigo-500" ${isCorrect ? 'checked' : ''}><input type="text" class="opt-val w-full bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400" value="${val}" placeholder="ตัวเลือก..."><button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-white transition"><i class="fa-solid fa-xmark"></i></button>`;
             container.appendChild(div);
         }
 
@@ -1061,7 +978,6 @@
 
         async function openProfile() {
             if(!currentUser) return;
-            
             let totalTime = 0;
             if (currentUser.study_time) Object.values(currentUser.study_time).forEach(t => totalTime += t);
             document.getElementById('profileTotalTime').innerText = Math.floor(totalTime / 60);
@@ -1083,14 +999,7 @@
                         ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">PASS</span>' 
                         : '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">FAIL</span>';
                     
-                    tb.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0">
-                            <td class="p-3 text-slate-500 text-xs">${new Date(r.created_at).toLocaleDateString('th-TH')}</td>
-                            <td class="p-3 font-medium text-slate-700 text-xs">${title}</td>
-                            <td class="p-3 text-center font-bold text-slate-800 text-sm">${r.score}/${r.total_score}</td>
-                            <td class="p-3 text-center">${badge}</td>
-                        </tr>
-                    `;
+                    tb.innerHTML += `<tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0"><td class="p-3 text-slate-500 text-xs">${new Date(r.created_at).toLocaleDateString('th-TH')}</td><td class="p-3 font-medium text-slate-700 text-xs">${title}</td><td class="p-3 text-center font-bold text-slate-800 text-sm">${r.score}/${r.total_score}</td><td class="p-3 text-center">${badge}</td></tr>`;
                 });
             } else {
                 tb.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 text-sm">ยังไม่มีประวัติการสอบ</td></tr>';
@@ -1101,4 +1010,3 @@
     </script>
 </body>
 </html>
-
