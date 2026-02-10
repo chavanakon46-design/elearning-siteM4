@@ -92,6 +92,16 @@
             background-color: var(--primary);
             border-radius: 3px 3px 0 0;
         }
+
+        /* Device Preview Frame */
+        .preview-frame {
+            border: 8px solid #333;
+            border-radius: 20px;
+            background: #fff;
+            transition: width 0.3s ease;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col text-slate-800">
@@ -347,7 +357,8 @@
                         <table class="w-full text-left text-sm">
                             <thead class="bg-slate-50 text-slate-600 uppercase font-bold text-xs tracking-wider">
                                 <tr>
-                                    <th class="p-4">ชั้น/เลขที่</th>
+                                    <th class="p-4">ชั้น</th>
+                                    <th class="p-4">เลขที่</th>
                                     <th class="p-4">รหัสนักเรียน</th>
                                     <th class="p-4">ชื่อ-นามสกุล</th>
                                     <th class="p-4 text-center">เวลาเรียน</th>
@@ -493,7 +504,23 @@
             <div class="space-y-4">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชื่อ-นามสกุล</label><input type="text" id="newStdName" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="เด็กชาย..."></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชั้น</label><select id="newStdClass" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"><option value="ม.4/1">ม.4/1</option><option value="ม.4/2">ม.4/2</option><option value="ม.4/3">ม.4/3</option><option value="ม.4/4">ม.4/4</option><option value="ม.4/5">ม.4/5</option><option value="ม.4/6">ม.4/6</option></select></div>
+                    <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">ชั้น</label>
+                        <!-- 🔥 แก้ไขตัวเลือก ชั้นเรียน ตรงนี้ (Edit Classes Here) -->
+                        <select id="newStdClass" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ม.4/1">ม.4/1</option>
+                            <option value="ม.4/2">ม.4/2</option>
+                            <option value="ม.4/3">ม.4/3</option>
+                            <option value="ม.4/4">ม.4/4</option>
+                            <option value="ม.4/5">ม.4/5</option>
+                            <option value="ม.4/6">ม.4/6</option>
+                            <option value="ม.4/7">ม.4/7</option>
+                            <option value="ม.4/8">ม.4/8</option>
+                            <option value="ม.4/9">ม.4/9</option>
+                            <option value="ม.4/10">ม.4/10</option>
+                            <option value="ม.4/11">ม.4/11</option>
+                            <option value="ม.4/12">ม.4/12</option>
+                        </select>
+                    </div>
                     <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">เลขที่</label><input type="number" id="newStdNumber" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1"></div>
                 </div>
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1 text-indigo-600">รหัสเข้าใช้งาน (5 หลัก)</label><input type="text" id="newStdCode" maxlength="5" class="w-full p-2 border-2 border-indigo-100 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50 text-center font-bold tracking-widest" placeholder="XXXXX"></div>
@@ -762,7 +789,8 @@
                     const active = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'}) : '-';
                     tb.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 group">
-                            <td class="p-4"><div class="font-bold text-slate-800">${s.student_class||'-'}</div><div class="text-xs text-slate-400">#${s.student_number}</div></td>
+                            <td class="p-4 font-bold text-slate-800">${s.student_class||'-'}</td>
+                            <td class="p-4 text-center">${s.student_number}</td>
                             <td class="p-4 font-mono text-indigo-600 font-bold">${s.student_code||'-'}</td>
                             <td class="p-4 font-medium text-slate-700">${s.student_name}<div class="text-[10px] text-slate-400">ล่าสุด: ${active}</div></td>
                             <td class="p-4 text-center text-xs font-mono">${Math.floor(s.totalTime/60)} น.</td>
