@@ -841,68 +841,104 @@
             if(tab === 'monitor') fetchStudentMonitor();
         }
 
-        async function fetchDashboardStats() {
+       async function fetchDashboardStats() {
             try {
-                // Fetch basic counts
+                console.log("Starting Fetch Dashboard..."); // Debug
+
+                // 1. Fetch Counts (จำนวนนับ)
                 const { count: studentCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true });
                 const { count: lessonCount } = await dbClient.from('lessons').select('*', { count: 'exact', head: true });
-                const today = new Date(); today.setHours(0,0,0,0);
+                
+                // หาจำนวนคนที่เข้าใช้งานวันนี้
+                const today = new Date(); 
+                today.setHours(0,0,0,0);
                 const { count: activeCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true }).gte('last_login', today.toISOString());
                 
-                // Fetch Detailed Data for Charts
-                const { data: allScores } = await dbClient.from('quiz_results').select('score, total_score, student_id');
-                const { data: allStudents } = await dbClient.from('student_progress').select('id, student_name, student_class, completed_lessons');
+                // 2. Fetch Detailed Data (ข้อมูลดิบสำหรับกราฟ)
+                const { data: allScores, error: scoreErr } = await dbClient.from('quiz_results').select('score, total_score, student_id');
+                if(scoreErr) console.error("Score Error:", scoreErr);
 
-                // Calc Avg Score
+                const { data: allStudents, error: stdErr } = await dbClient.from('student_progress').select('id, student_name, student_class, completed_lessons');
+                if(stdErr) console.error("Student Error:", stdErr);
+
+                // --- ส่วนคำนวณสถิติ ---
+
+                // 2.1 คะแนนสอบเฉลี่ย
                 let totalScoreSum = 0; let totalMaxScore = 0;
-                if(allScores) allScores.forEach(s => { totalScoreSum += s.score; totalMaxScore += s.total_score; });
+                if(allScores && allScores.length > 0) {
+                    allScores.forEach(s => { 
+                        totalScoreSum += (s.score || 0); 
+                        totalMaxScore += (s.total_score || 0); 
+                    });
+                }
                 const avgScore = totalMaxScore > 0 ? ((totalScoreSum / totalMaxScore) * 100).toFixed(1) + '%' : '0%';
                 
-                // Calc Completion
+                // 2.2 เรียนจบแล้วกี่บท
                 let totalCompleted = 0;
                 if(allStudents) allStudents.forEach(s => totalCompleted += (s.completed_lessons ? s.completed_lessons.length : 0));
                 
-                // Top Students Logic
-                let studentScores = {};
-                if(allStudents) allStudents.forEach(s => studentScores[s.id] = { ...s, total: 0 });
-                if(allScores) allScores.forEach(s => { if(studentScores[s.student_id]) studentScores[s.student_id].total += s.score; });
-                const top5 = Object.values(studentScores).sort((a,b) => b.total - a.total).slice(0, 5);
-
-                // Render Stats
+                // --- ส่วนแสดงผลตัวเลข (Metrics) ---
                 document.getElementById('stat-total-students').innerText = studentCount || 0;
-                document.getElementById('stat-total-lessons').innerText = lessonCount || 0;
+                // document.getElementById('stat-total-lessons').innerText = lessonCount || 0; // ไม่มี Element นี้ใน HTML
                 document.getElementById('stat-active-today').innerText = activeCount || 0;
                 document.getElementById('stat-avg-score').innerText = avgScore;
                 document.getElementById('stat-completion').innerText = totalCompleted + ' บท';
 
-                // Render Table
-                const topTable = document.getElementById('topStudentsTable'); topTable.innerHTML = '';
+                // --- ส่วนเตรียมข้อมูลกราฟ ---
+                
+                // 3.1 คำนวณ Top 5 นักเรียน (ต้องรวมคะแนนสอบก่อน)
+                let studentScores = {};
+                if(allStudents) allStudents.forEach(s => studentScores[s.id] = { ...s, total: 0 });
+                
+                if(allScores) {
+                    allScores.forEach(s => { 
+                        if(studentScores[s.student_id]) {
+                            studentScores[s.student_id].total += (s.score || 0); 
+                        }
+                    });
+                }
+                const top5 = Object.values(studentScores).sort((a,b) => b.total - a.total).slice(0, 5);
+
+                // Render ตาราง 5 อันดับแรก
+                const topTable = document.getElementById('topStudentsTable'); 
+                topTable.innerHTML = '';
+                if(top5.length === 0) topTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูลคะแนน</td></tr>';
+                
                 top5.forEach((s, i) => {
                     topTable.innerHTML += `
                         <tr class="border-b last:border-0 hover:bg-slate-50">
                             <td class="p-3 font-bold text-indigo-600">#${i+1}</td>
-                            <td class="p-3 text-slate-700">${s.student_name}</td>
-                            <td class="p-3 text-slate-500 text-xs">${s.student_class}</td>
+                            <td class="p-3 text-slate-700">${s.student_name || 'ไม่ระบุชื่อ'}</td>
+                            <td class="p-3 text-slate-500 text-xs">${s.student_class || '-'}</td>
                             <td class="p-3 text-center font-bold text-green-600">${s.total}</td>
                         </tr>
                     `;
                 });
 
-                // Chart 1: Score by Class
+                // 3.2 กราฟแท่ง: คะแนนเฉลี่ยรายห้อง (Score by Class)
                 const classScores = {};
                 if(allStudents) {
                     allStudents.forEach(s => {
-                        if(!classScores[s.student_class]) classScores[s.student_class] = { sum: 0, count: 0 };
-                        classScores[s.student_class].sum += studentScores[s.id].total;
-                        classScores[s.student_class].count++;
+                        // ถ้าไม่มีระบุห้อง ให้ใส่เป็น 'Unknown'
+                        const className = s.student_class ? s.student_class : 'ไม่ระบุห้อง';
+                        
+                        if(!classScores[className]) classScores[className] = { sum: 0, count: 0 };
+                        
+                        // เอาคะแนนรวมของคนนั้นมาคิด
+                        if(studentScores[s.id]) {
+                             classScores[className].sum += studentScores[s.id].total;
+                             classScores[className].count++;
+                        }
                     });
                 }
+                
                 const chartLabels1 = Object.keys(classScores).sort();
-                const chartData1 = chartLabels1.map(c => (classScores[c].sum / classScores[c].count).toFixed(1));
+                // ป้องกันการหารด้วยศูนย์
+                const chartData1 = chartLabels1.map(c => classScores[c].count > 0 ? (classScores[c].sum / classScores[c].count).toFixed(1) : 0);
                 
                 renderChart('chartScoreByClass', 'bar', chartLabels1, chartData1, 'คะแนนเฉลี่ย', '#6366f1');
 
-                // Chart 2: Completion Progress
+                // 3.3 กราฟโดนัท: สัดส่วนความก้าวหน้า (Progress)
                 const progressBuckets = { 'ยังไม่เริ่ม': 0, '1-2 บท': 0, '3-4 บท': 0, 'ครบ 5 บท': 0 };
                 if(allStudents) {
                     allStudents.forEach(s => {
@@ -910,14 +946,16 @@
                         if(c === 0) progressBuckets['ยังไม่เริ่ม']++;
                         else if(c <= 2) progressBuckets['1-2 บท']++;
                         else if(c <= 4) progressBuckets['3-4 บท']++;
-                        else progressBuckets['ครบ 5 บท']++;
+                        else progressBuckets['ครบ 5 บท']++; // สมมติว่ามี 5 บท
                     });
                 }
                 renderChart('chartProgress', 'doughnut', Object.keys(progressBuckets), Object.values(progressBuckets), 'จำนวนคน', ['#94a3b8', '#fbbf24', '#3b82f6', '#22c55e']);
 
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error("FATAL ERROR in Dashboard:", e); 
+                Swal.fire('Error', 'เกิดข้อผิดพลาดในการโหลดข้อมูล Dashboard', 'error');
+            }
         }
-
         function renderChart(id, type, labels, data, label, color) {
             const ctx = document.getElementById(id).getContext('2d');
             if(chartInstances[id]) chartInstances[id].destroy(); // Destroy old chart
@@ -1179,3 +1217,4 @@
     </script>
 </body>
 </html>
+
