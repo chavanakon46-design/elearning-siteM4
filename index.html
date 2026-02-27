@@ -8,7 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -185,7 +186,7 @@
                     <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 text-2xl">
                         <i class="fa-solid fa-chalkboard-user"></i>
                     </div>
-                    <h2 class="text-xl font-bold text-slate-800">ยืนยันตัวตนผู้สอน</h2>
+                    <h2 class="text-xl font-bold text-slate-800">ยืนยันตัวตนผู้สอน/กรรมการ</h2>
                     <p class="text-slate-500 text-sm">กรุณากรอกรหัสผ่านเพื่อจัดการระบบ</p>
                 </div>
 
@@ -588,7 +589,7 @@
 
         window.onload = function() { initTopicGrid(); initAdminSelect(); };
 
-        // --- AUTH SYSTEM (Direct Check) ---
+        // --- AUTH SYSTEM ---
         async function handleLogin() {
             const code = document.getElementById('stdCode').value.trim();
             if (!code) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสเข้าใช้งาน', 'warning');
@@ -598,7 +599,7 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
             btn.disabled = true;
 
-            // Admin Trigger
+            // Admin / Guest Trigger
             if (code.toLowerCase() === 'admin') {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('teacherLoginSection').classList.remove('hidden');
@@ -641,6 +642,15 @@
                 fetchStudentMonitor();
                 fetchDashboardStats(); 
                 document.getElementById('teacherPassword').value = '';
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'เข้าสู่ระบบแอดมิน', showConfirmButton: false, timer: 1500 });
+            } else if (pass === '11111') {
+                currentUser = { role: 'guest', name: 'กรรมการ (อ่านอย่างเดียว)' };
+                showSection('adminDashboard');
+                fetchLessonsForAdmin();
+                fetchStudentMonitor();
+                fetchDashboardStats(); 
+                document.getElementById('teacherPassword').value = '';
+                Swal.fire('ยินดีต้อนรับ', 'เข้าสู่ระบบในฐานะกรรมการ (ไม่สามารถแก้ไขหรือลบข้อมูลได้)', 'info');
             } else {
                 Swal.fire('รหัสผ่านผิด', 'กรุณาลองใหม่อีกครั้ง', 'error');
             }
@@ -676,13 +686,11 @@
         async function loadLessonGroup(catId) {
             Swal.fire({ title: 'กำลังโหลด...', didOpen: () => Swal.showLoading() });
             try {
-                // Try to fetch from DB
                 let { data } = await dbClient.from('lessons').select('*').eq('category', catId).maybeSingle();
                 
-                // --- MOCK DATA FALLBACK (สำหรับดูตัวอย่างหากไม่มีข้อมูลใน DB) ---
                 if (!data) {
                     data = {
-                        id: -1, // Fake ID
+                        id: -1, 
                         title: 'ตัวอย่าง: บทที่ 1 บทนำ (Demo)',
                         content: `
                             <div class="space-y-6">
@@ -756,7 +764,6 @@
                 if (currentUser && currentLesson && currentLesson.id > 0 && currentUser.study_time) {
                     const oldTime = currentUser.study_time[currentLesson.category] || 0;
                     currentUser.study_time[currentLesson.category] = oldTime + secondsSpent;
-                    // Improved Error Handling
                     await dbClient.from('student_progress').update({ study_time: currentUser.study_time }).eq('id', currentUser.id)
                         .catch(err => {
                             console.error(err);
@@ -796,7 +803,6 @@
             }
 
             try {
-                // อัปเดตการดึงค่า error ออกมาจาก Supabase response
                 const { error } = await dbClient.from('quiz_results').insert([{ 
                     student_id: currentUser.id, 
                     lesson_id: currentLesson.id, 
@@ -805,7 +811,6 @@
                     passed: passed 
                 }]);
                 
-                // บังคับโยน error ไปที่ catch block หากมีข้อผิดพลาด
                 if (error) throw error;
                 
                 Swal.fire({ 
@@ -843,27 +848,16 @@
 
        async function fetchDashboardStats() {
             try {
-                console.log("Starting Fetch Dashboard..."); // Debug
-
-                // 1. Fetch Counts (จำนวนนับ)
                 const { count: studentCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true });
                 const { count: lessonCount } = await dbClient.from('lessons').select('*', { count: 'exact', head: true });
                 
-                // หาจำนวนคนที่เข้าใช้งานวันนี้
                 const today = new Date(); 
                 today.setHours(0,0,0,0);
                 const { count: activeCount } = await dbClient.from('student_progress').select('*', { count: 'exact', head: true }).gte('last_login', today.toISOString());
                 
-                // 2. Fetch Detailed Data (ข้อมูลดิบสำหรับกราฟ)
                 const { data: allScores, error: scoreErr } = await dbClient.from('quiz_results').select('score, total_score, student_id');
-                if(scoreErr) console.error("Score Error:", scoreErr);
-
                 const { data: allStudents, error: stdErr } = await dbClient.from('student_progress').select('id, student_name, student_class, completed_lessons');
-                if(stdErr) console.error("Student Error:", stdErr);
 
-                // --- ส่วนคำนวณสถิติ ---
-
-                // 2.1 คะแนนสอบเฉลี่ย
                 let totalScoreSum = 0; let totalMaxScore = 0;
                 if(allScores && allScores.length > 0) {
                     allScores.forEach(s => { 
@@ -873,20 +867,14 @@
                 }
                 const avgScore = totalMaxScore > 0 ? ((totalScoreSum / totalMaxScore) * 100).toFixed(1) + '%' : '0%';
                 
-                // 2.2 เรียนจบแล้วกี่บท
                 let totalCompleted = 0;
                 if(allStudents) allStudents.forEach(s => totalCompleted += (s.completed_lessons ? s.completed_lessons.length : 0));
                 
-                // --- ส่วนแสดงผลตัวเลข (Metrics) ---
                 document.getElementById('stat-total-students').innerText = studentCount || 0;
-                // document.getElementById('stat-total-lessons').innerText = lessonCount || 0; // ไม่มี Element นี้ใน HTML
                 document.getElementById('stat-active-today').innerText = activeCount || 0;
                 document.getElementById('stat-avg-score').innerText = avgScore;
                 document.getElementById('stat-completion').innerText = totalCompleted + ' บท';
 
-                // --- ส่วนเตรียมข้อมูลกราฟ ---
-                
-                // 3.1 คำนวณ Top 5 นักเรียน (ต้องรวมคะแนนสอบก่อน)
                 let studentScores = {};
                 if(allStudents) allStudents.forEach(s => studentScores[s.id] = { ...s, total: 0 });
                 
@@ -899,7 +887,6 @@
                 }
                 const top5 = Object.values(studentScores).sort((a,b) => b.total - a.total).slice(0, 5);
 
-                // Render ตาราง 5 อันดับแรก
                 const topTable = document.getElementById('topStudentsTable'); 
                 topTable.innerHTML = '';
                 if(top5.length === 0) topTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูลคะแนน</td></tr>';
@@ -915,16 +902,11 @@
                     `;
                 });
 
-                // 3.2 กราฟแท่ง: คะแนนเฉลี่ยรายห้อง (Score by Class)
                 const classScores = {};
                 if(allStudents) {
                     allStudents.forEach(s => {
-                        // ถ้าไม่มีระบุห้อง ให้ใส่เป็น 'Unknown'
                         const className = s.student_class ? s.student_class : 'ไม่ระบุห้อง';
-                        
                         if(!classScores[className]) classScores[className] = { sum: 0, count: 0 };
-                        
-                        // เอาคะแนนรวมของคนนั้นมาคิด
                         if(studentScores[s.id]) {
                              classScores[className].sum += studentScores[s.id].total;
                              classScores[className].count++;
@@ -933,12 +915,10 @@
                 }
                 
                 const chartLabels1 = Object.keys(classScores).sort();
-                // ป้องกันการหารด้วยศูนย์
                 const chartData1 = chartLabels1.map(c => classScores[c].count > 0 ? (classScores[c].sum / classScores[c].count).toFixed(1) : 0);
                 
                 renderChart('chartScoreByClass', 'bar', chartLabels1, chartData1, 'คะแนนเฉลี่ย', '#6366f1');
 
-                // 3.3 กราฟโดนัท: สัดส่วนความก้าวหน้า (Progress)
                 const progressBuckets = { 'ยังไม่เริ่ม': 0, '1-2 บท': 0, '3-4 บท': 0, 'ครบ 5 บท': 0 };
                 if(allStudents) {
                     allStudents.forEach(s => {
@@ -946,7 +926,7 @@
                         if(c === 0) progressBuckets['ยังไม่เริ่ม']++;
                         else if(c <= 2) progressBuckets['1-2 บท']++;
                         else if(c <= 4) progressBuckets['3-4 บท']++;
-                        else progressBuckets['ครบ 5 บท']++; // สมมติว่ามี 5 บท
+                        else progressBuckets['ครบ 5 บท']++;
                     });
                 }
                 renderChart('chartProgress', 'doughnut', Object.keys(progressBuckets), Object.values(progressBuckets), 'จำนวนคน', ['#94a3b8', '#fbbf24', '#3b82f6', '#22c55e']);
@@ -956,9 +936,10 @@
                 Swal.fire('Error', 'เกิดข้อผิดพลาดในการโหลดข้อมูล Dashboard', 'error');
             }
         }
+
         function renderChart(id, type, labels, data, label, color) {
             const ctx = document.getElementById(id).getContext('2d');
-            if(chartInstances[id]) chartInstances[id].destroy(); // Destroy old chart
+            if(chartInstances[id]) chartInstances[id].destroy(); 
             
             chartInstances[id] = new Chart(ctx, {
                 type: type,
@@ -1000,9 +981,19 @@
                 monitorDataCache = students;
                 const tb = document.getElementById('monitorTableBody'); tb.innerHTML = '';
                 if(!students.length) tb.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
+                
                 students.forEach((s, i) => {
                     const comp = s.completed_lessons ? s.completed_lessons.length : 0;
                     const active = s.last_login ? new Date(s.last_login).toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'}) : '-';
+                    
+                    let actionButtons = `<button onclick="viewStudentDetail(${i})" class="text-xs bg-white border px-2 py-1 rounded hover:bg-slate-50" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>`;
+                    if (currentUser?.role === 'admin') {
+                        actionButtons += `
+                            <button onclick="openEditStudentModal(${i})" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteStudent(${s.id})" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                        `;
+                    }
+
                     tb.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b border-slate-50 group">
                             <td class="p-4"><div class="font-bold text-slate-800">${s.student_class||'-'}</div></td>
@@ -1012,9 +1003,7 @@
                             <td class="p-4 text-center text-xs font-mono">${Math.floor(s.totalTime/60)} น.</td>
                             <td class="p-4 text-center font-bold text-green-600">${s.totalScore}</td>
                             <td class="p-4 text-center flex gap-1 justify-center opacity-70 group-hover:opacity-100 transition">
-                                <button onclick="viewStudentDetail(${i})" class="text-xs bg-white border px-2 py-1 rounded hover:bg-slate-50" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
-                                <button onclick="openEditStudentModal(${i})" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200" title="แก้ไขข้อมูล"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deleteStudent(${s.id})" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                                ${actionButtons}
                             </td>
                         </tr>`;
                 });
@@ -1022,6 +1011,7 @@
         }
 
         async function deleteStudent(id) {
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
             const res = await Swal.fire({ title: 'ยืนยันการลบ?', text: 'ข้อมูลผลการเรียนทั้งหมดจะหายไป', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
             if (res.isConfirmed) {
                 await dbClient.from('student_progress').delete().eq('id', id);
@@ -1046,9 +1036,7 @@
             document.getElementById('adminDetailModal').classList.remove('hidden');
         }
 
-        // Device Preview
         function openDevicePreview() {
-            // Write current content to iframe
             const html = document.documentElement.outerHTML;
             const iframe = document.getElementById('previewIframe');
             iframe.srcdoc = html;
@@ -1058,14 +1046,15 @@
             document.getElementById('previewIframe').style.width = w;
         }
 
-        // Add/Edit Student Logic
         function openAddStudentModal() { 
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเพิ่มข้อมูลได้', 'warning');
             ['newStdName','newStdNumber','newStdCode','editStudentId'].forEach(id=>document.getElementById(id).value=''); 
             document.getElementById('modalStudentTitle').innerText = 'เพิ่มนักเรียนใหม่';
             document.getElementById('addStudentModal').classList.remove('hidden'); 
         }
 
         function openEditStudentModal(idx) {
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
             const s = monitorDataCache[idx];
             document.getElementById('newStdName').value = s.student_name;
             document.getElementById('newStdClass').value = s.student_class;
@@ -1077,6 +1066,7 @@
         }
 
         async function saveStudentToDB() {
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
             const n = document.getElementById('newStdName').value.trim(), c = document.getElementById('newStdClass').value, num = document.getElementById('newStdNumber').value.trim(), code = document.getElementById('newStdCode').value.trim();
             const editId = document.getElementById('editStudentId').value;
 
@@ -1084,7 +1074,6 @@
             
             const payload = { student_name:n, student_class:c, student_number:num, student_code:code };
             if(!editId) {
-                // Add New defaults
                 payload.study_time = {};
                 payload.completed_lessons = [];
             }
@@ -1096,9 +1085,8 @@
             if(error) Swal.fire('Error',error.message,'error'); else { Swal.fire('Success','บันทึกเรียบร้อย','success'); closeModal('addStudentModal'); fetchStudentMonitor(); }
         }
 
-        // Merge Logic
         function openMergeModal() {
-            // Populate Dropdowns
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถรวมบัญชีได้', 'warning');
             const src = document.getElementById('mergeSource');
             const tgt = document.getElementById('mergeTarget');
             src.innerHTML = ''; tgt.innerHTML = '';
@@ -1113,6 +1101,7 @@
         }
 
         async function executeMerge() {
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
             const sId = document.getElementById('mergeSource').value;
             const tId = document.getElementById('mergeTarget').value;
 
@@ -1130,14 +1119,10 @@
             if(!res.isConfirmed) return;
 
             try {
-                // 1. Move Quiz Results
                 await dbClient.from('quiz_results').update({ student_id: tId }).eq('student_id', sId);
-
-                // 2. Merge Progress
                 const { data: source } = await dbClient.from('student_progress').select('*').eq('id', sId).single();
                 const { data: target } = await dbClient.from('student_progress').select('*').eq('id', tId).single();
 
-                // Merge time
                 const newTime = { ...target.study_time };
                 if(source.study_time) {
                     for (const [k, v] of Object.entries(source.study_time)) {
@@ -1145,15 +1130,11 @@
                     }
                 }
 
-                // Merge Completed Lessons
                 const sComp = source.completed_lessons || [];
                 const tComp = target.completed_lessons || [];
                 const newComp = [...new Set([...tComp, ...sComp])];
 
-                // Update Target
                 await dbClient.from('student_progress').update({ study_time: newTime, completed_lessons: newComp }).eq('id', tId);
-
-                // 3. Delete Source
                 await dbClient.from('student_progress').delete().eq('id', sId);
 
                 Swal.fire('Success', 'รวมบัญชีเรียบร้อยแล้ว', 'success');
@@ -1165,7 +1146,6 @@
             }
         }
 
-        // --- NEW: Preview Feature ---
         function previewLessonContent() {
             const content = document.getElementById('editContent').value;
             const title = document.getElementById('editTitle').value || 'ตัวอย่างบทเรียน';
@@ -1184,12 +1164,17 @@
         function renderQuizList() { const d=document.getElementById('qList'); d.innerHTML=''; if(!editingQuizData.length){d.innerHTML='<p class="text-center text-sm text-slate-400">ไม่มีข้อสอบ</p>';return;} editingQuizData.forEach((q,i)=>{ d.innerHTML+=`<div class="p-2 border rounded mb-1 text-sm bg-white"><div class="font-bold truncate">Q${i+1}. ${q.question}</div><div class="flex gap-2 justify-end mt-1"><button onclick="editQ(${i})" class="text-blue-500 text-xs">แก้ไข</button><button onclick="delQ(${i})" class="text-red-500 text-xs">ลบ</button></div></div>`; }); }
         
         async function saveLessonToDB() {
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
             const id=document.getElementById('editId').value, load={ title:document.getElementById('editTitle').value, category:document.getElementById('editCategory').value, content:document.getElementById('editContent').value, quiz_data:editingQuizData };
             if(!load.title) return Swal.fire('Warning','ใส่หัวข้อ','warning');
             const { error } = id ? await dbClient.from('lessons').update(load).eq('id',id) : await dbClient.from('lessons').insert([load]);
             if(error) Swal.fire('Error',error.message,'error'); else { Swal.fire('Success','บันทึกแล้ว','success'); fetchLessonsForAdmin(); }
         }
-        async function deleteLesson() { const id=document.getElementById('editId').value; if(id && confirm('ลบ?')) { await dbClient.from('lessons').delete().eq('id',id); fetchLessonsForAdmin(); prepareNewLesson(); } }
+        async function deleteLesson() { 
+            if (currentUser?.role !== 'admin') return Swal.fire('ไม่อนุญาต', 'บัญชีนี้สำหรับการเยี่ยมชมเท่านั้น ไม่สามารถเปลี่ยนแปลงข้อมูลได้', 'warning');
+            const id=document.getElementById('editId').value; 
+            if(id && confirm('ลบ?')) { await dbClient.from('lessons').delete().eq('id',id); fetchLessonsForAdmin(); prepareNewLesson(); } 
+        }
 
         function openQuestionModal() { editingQuestionIndex=-1; document.getElementById('qInputText').value=''; document.getElementById('optionInputsContainer').innerHTML=''; for(let i=0;i<4;i++)addOptionInput(); document.getElementById('questionModal').classList.remove('hidden'); }
         function addOptionInput(v='',c=false) { const d=document.createElement('div'); d.className='flex items-center gap-2 mb-2'; d.innerHTML=`<input type="radio" name="co" class="w-4 h-4" ${c?'checked':''}> <input type="text" class="opt-val w-full border p-1 rounded text-sm" value="${v}" placeholder="ตัวเลือก..."> <button onclick="this.parentElement.remove()">x</button>`; document.getElementById('optionInputsContainer').appendChild(d); }
